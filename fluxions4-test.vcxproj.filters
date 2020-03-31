@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="vkCube">
+      <UniqueIdentifier>{229454d2-6ce1-4f9d-bac3-07e829302af5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\fluxions_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hatchetfish_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hatchetfish_stopwatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkcube\cube.c">
+      <Filter>vkCube</Filter>
+    </ClCompile>
+    <ClCompile Include="vkcube\esTransform.c">
+      <Filter>vkCube</Filter>
+    </ClCompile>
+    <ClCompile Include="vkcube\main.c">
+      <Filter>vkCube</Filter>
+    </ClCompile>
+    <ClCompile Include="vkcube\xdg-shell-protocol.c">
+      <Filter>vkCube</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions_vulkan_context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions_vulkan_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\vkcube.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="src\vkcube.frag.spv.h.in">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="src\vkcube.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="src\vkcube.vert.spv.h.in">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="vkcube\vkcube.frag">
+      <Filter>vkCube</Filter>
+    </None>
+    <None Include="vkcube\vkcube.vert">
+      <Filter>vkCube</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\hatchetfish.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\hatchetfish_log.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\hatchetfish_stopwatch.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions_gte_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vkcube\common.h">
+      <Filter>vkCube</Filter>
+    </ClInclude>
+    <ClInclude Include="vkcube\esUtil.h">
+      <Filter>vkCube</Filter>
+    </ClInclude>
+    <ClInclude Include="vkcube\xdg-shell-protocol.h">
+      <Filter>vkCube</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions_vulkan_context.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions_vulkan_config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
