@@ -6,6 +6,7 @@ namespace Fluxions {
 		FxMatrix4f modelview;
 		FxMatrix4f modelviewprojection;
 		float normal[12];
+		FxColor4f color{ 0.1f, 0.2f, 0.3f, 1.0f };
 	};
 
 	static uint32_t vs_spirv_source[] = {
@@ -14,6 +15,19 @@ namespace Fluxions {
 
 	static uint32_t fs_spirv_source[] = {
 		#include "vkcube.frag.spv.h.in"
+	};
+
+	struct Vertex {
+		FxVector3f position;
+		FxVector3f normal;
+		FxVector3f color;
+		FxVector3f texCoord;
+	};
+
+	std::vector<Vertex> vertices{
+		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } },
+		{ { +1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ { +0.0f, +1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f }, { 0.5f, 1.0f, 0.0f } },
 	};
 
 	static const float vVertices[] = {
@@ -128,297 +142,468 @@ namespace Fluxions {
 
 
 	bool VulkanConfig::init() {
-		VkDescriptorSetLayoutBinding dslb;
-		memset(&dslb, 0, sizeof(dslb));
-		dslb.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		dslb.descriptorCount = 1;
-		dslb.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		dslb.pImmutableSamplers = NULL;
+		VkDescriptorSetLayoutBinding descriptorSetLayoutBindings[] = { {
+			0,                                 // binding
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, // descriptorType
+			1,                                 // descriptorCount
+			VK_SHADER_STAGE_VERTEX_BIT,        // stageFlags
+			nullptr                            // VkSampler* pImmutableSamplers
+		} };
 
-		VkDescriptorSetLayoutCreateInfo dslci;
-		memset(&dslci, 0, sizeof(dslci));
-		dslci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		dslci.bindingCount = 1;
-		dslci.pBindings = &dslb;
+		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
+			VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO, // sType
+			nullptr,	                       // pNext
+			0,                                 // flags
+			1,                                 // bindingCount
+			descriptorSetLayoutBindings        // pBindings
+		};
 
-		VkDescriptorSetLayout set_layout;
-		vkCreateDescriptorSetLayout(context_.device(), &dslci, nullptr, &set_layout);
+		VkDescriptorSetLayout descriptorSetLayout;
+		vkCreateDescriptorSetLayout(context_.device(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout);
 
-		VkPipelineLayoutCreateInfo plci;
-		memset(&plci, 0, sizeof(plci));
-		plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		plci.setLayoutCount = 1;
-		plci.pSetLayouts = &set_layout;
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
+			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, // sType
+			nullptr,                 // pNext
+			0,                       // flags
+			1,                       // setLayoutCount
+			&descriptorSetLayout,    // pSetLayouts
+			0,                       // pushConstantRangeCount
+			nullptr                  // pPushConstantRanges
+		};
+		vkCreatePipelineLayout(context_.device(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout_);
 
-		vkCreatePipelineLayout(context_.device(), &plci, nullptr, &pipelineLayout_);
+		VkVertexInputBindingDescription vertexInputBindingDescriptions[3] = {
+			//uint32_t             binding;
+			//uint32_t             stride;
+			//VkVertexInputRate    inputRate;
+			{ 0, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
+			{ 1, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
+			{ 2, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
+		};
 
-		VkVertexInputBindingDescription vibd[3];
-		vibd[0].binding = 0;
-		vibd[0].stride = 3 * sizeof(float);
-		vibd[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		vibd[1].binding = 1;
-		vibd[1].stride = 3 * sizeof(float);
-		vibd[1].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		vibd[2].binding = 2;
-		vibd[2].stride = 3 * sizeof(float);
-		vibd[2].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+		VkVertexInputAttributeDescription vertexInputAttributeDescriptions[3] = {
+			//uint32_t    location;
+			//uint32_t    binding;
+			//VkFormat    format;
+			//uint32_t    offset;
+			{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },
+			{ 1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0 },
+			{ 2, 2, VK_FORMAT_R32G32B32_SFLOAT, 0 },
+		};
 
-		VkVertexInputAttributeDescription viad[3];
-		viad[0].location = 0;
-		viad[0].binding = 0;
-		viad[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		viad[0].offset = 0;
-		viad[1].location = 1;
-		viad[1].binding = 1;
-		viad[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		viad[1].offset = 0;
-		viad[2].location = 2;
-		viad[2].binding = 2;
-		viad[2].format = VK_FORMAT_R32G32B32_SFLOAT;
-		viad[2].offset = 0;
+		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = {
+			//VkStructureType                             sType;
+			//const void*                                 pNext;
+			//VkPipelineVertexInputStateCreateFlags       flags;
+			//uint32_t                                    vertexBindingDescriptionCount;
+			//const VkVertexInputBindingDescription*      pVertexBindingDescriptions;
+			//uint32_t                                    vertexAttributeDescriptionCount;
+			//const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
+			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			nullptr, 0,
+			3, vertexInputBindingDescriptions,
+			3, vertexInputAttributeDescriptions
+		};
 
-		VkPipelineVertexInputStateCreateInfo pvisci;
-		memset(&pvisci, 0, sizeof(pvisci));
-		pvisci.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		pvisci.vertexBindingDescriptionCount = 3;
-		pvisci.pVertexBindingDescriptions = vibd;
-		pvisci.vertexAttributeDescriptionCount = 3;
-		pvisci.pVertexAttributeDescriptions = viad;
+		VkShaderModuleCreateInfo vsShaderModuleCreateInfo = {
+			//VkStructureType              sType;
+			//const void*                  pNext;
+			//VkShaderModuleCreateFlags    flags;
+			//size_t                       codeSize;
+			//const uint32_t*              pCode;
+			VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			nullptr, 0,
+			sizeof(vs_spirv_source),
+			(uint32_t*)vs_spirv_source
+		};
+		VkShaderModule vsShaderModule;
+		vkCreateShaderModule(context_.device(), &vsShaderModuleCreateInfo, nullptr, &vsShaderModule);
 
-		VkShaderModuleCreateInfo vs_smci;
-		memset(&vs_smci, 0, sizeof(vs_smci));
-		vs_smci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		vs_smci.codeSize = sizeof(vs_spirv_source);
-		vs_smci.pCode = (uint32_t*)vs_spirv_source;
-		VkShaderModule vs_module;
-		vkCreateShaderModule(context_.device(), &vs_smci, nullptr, &vs_module);
+		VkShaderModuleCreateInfo fsShaderModuleCreateInfo = {
+			VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			nullptr, 0,
+			sizeof(fs_spirv_source),
+			(uint32_t*)fs_spirv_source
+		};
+		VkShaderModule fsShaderModule;
+		vkCreateShaderModule(context_.device(), &fsShaderModuleCreateInfo, nullptr, &fsShaderModule);
 
-		VkShaderModuleCreateInfo fs_smci;
-		memset(&fs_smci, 0, sizeof(fs_smci));
-		fs_smci.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		fs_smci.codeSize = sizeof(fs_spirv_source);
-		fs_smci.pCode = (uint32_t*)fs_spirv_source;
-		VkShaderModule fs_module;
-		vkCreateShaderModule(context_.device(), &fs_smci, nullptr, &fs_module);
+		VkPipelineCache pipelineCache = VK_NULL_HANDLE;
+		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfos[2] = {
+			{
+				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
+				VK_SHADER_STAGE_VERTEX_BIT, vsShaderModule, "main", nullptr
+			},
+			{
+				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
+				VK_SHADER_STAGE_FRAGMENT_BIT, fsShaderModule, "main", nullptr
+			},
+		};
 
-		VkPipelineCache pc = VK_NULL_HANDLE;
-		VkPipelineShaderStageCreateInfo pssci[2];
-		memset(&pssci[0], 0, sizeof(VkPipelineShaderStageCreateInfo) * 2);
-		pssci[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		pssci[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		pssci[0].module = vs_module;
-		pssci[0].pName = "main";
-		pssci[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		pssci[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		pssci[1].module = fs_module;
-		pssci[1].pName = "main";
+		VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo = {
+			//VkStructureType                            sType;
+			//const void*                                pNext;
+			//VkPipelineInputAssemblyStateCreateFlags    flags;
+			//VkPrimitiveTopology                        topology;
+			//VkBool32                                   primitiveRestartEnable;
+			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			nullptr, 0,
+			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+			VK_FALSE
+		};
 
-		VkPipelineInputAssemblyStateCreateInfo piasci;
-		memset(&piasci, 0, sizeof(piasci));
-		piasci.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		piasci.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-		piasci.primitiveRestartEnable = false;
+		VkPipelineTessellationStateCreateInfo pipelineTessellationStateCreateInfo = {
+			//VkStructureType                           sType;
+			//const void*                               pNext;
+			//VkPipelineTessellationStateCreateFlags    flags;
+			//uint32_t                                  patchControlPoints;
+			VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+			nullptr, 0,
+			0
+		};
 
-		VkPipelineViewportStateCreateInfo pvsci;
-		memset(&pvsci, 0, sizeof(pvsci));
-		pvsci.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		pvsci.viewportCount = 1;
-		pvsci.scissorCount = 1;
+		VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo = {
+			//VkStructureType                       sType;
+			//const void*                           pNext;
+			//VkPipelineViewportStateCreateFlags    flags;
+			//uint32_t                              viewportCount;
+			//const VkViewport*                     pViewports;
+			//uint32_t                              scissorCount;
+			//const VkRect2D*                       pScissors;
+			VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			nullptr, 0,
+			1, nullptr,
+			1, nullptr
+		};
 
-		VkPipelineRasterizationStateCreateInfo prsci;
-		memset(&prsci, 0, sizeof(prsci));
-		prsci.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		prsci.rasterizerDiscardEnable = false;
-		prsci.polygonMode = VK_POLYGON_MODE_FILL;
-		prsci.cullMode = VK_CULL_MODE_BACK_BIT;
-		prsci.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		prsci.lineWidth = 1.0f;
+		VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo = {
+			//VkStructureType                            sType;
+			//const void*                                pNext;
+			//VkPipelineRasterizationStateCreateFlags    flags;
+			//VkBool32                                   depthClampEnable;
+			//VkBool32                                   rasterizerDiscardEnable;
+			//VkPolygonMode                              polygonMode;
+			//VkCullModeFlags                            cullMode;
+			//VkFrontFace                                frontFace;
+			//VkBool32                                   depthBiasEnable;
+			//float                                      depthBiasConstantFactor;
+			//float                                      depthBiasClamp;
+			//float                                      depthBiasSlopeFactor;
+			//float                                      lineWidth;
+			VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+			nullptr, 0,
+			VK_FALSE,
+			VK_FALSE,
+			VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_BACK_BIT,
+			VK_FRONT_FACE_CLOCKWISE,
+			VK_FALSE,
+			0.0f,
+			0.0f,
+			0.0f,
+			1.0f
+		};
 
-		VkPipelineMultisampleStateCreateInfo pmsci;
-		memset(&pmsci, 0, sizeof(pmsci));
-		pmsci.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		pmsci.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = {
+			//VkStructureType                          sType;
+			//const void*                              pNext;
+			//VkPipelineMultisampleStateCreateFlags    flags;
+			//VkSampleCountFlagBits                    rasterizationSamples;
+			//VkBool32                                 sampleShadingEnable;
+			//float                                    minSampleShading;
+			//const VkSampleMask*                      pSampleMask;
+			//VkBool32                                 alphaToCoverageEnable;
+			//VkBool32                                 alphaToOneEnable;
+			VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+			nullptr, 0,
+			VK_SAMPLE_COUNT_1_BIT,
+			VK_FALSE,
+			0.0f,
+			nullptr,
+			VK_FALSE,
+			VK_FALSE
+		};
 
-		VkPipelineDepthStencilStateCreateInfo pdssci;
-		memset(&pdssci, 0, sizeof(pdssci));
-		pdssci.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo = {
+			//VkStructureType                           sType;
+			//const void*                               pNext;
+			//VkPipelineDepthStencilStateCreateFlags    flags;
+			//VkBool32                                  depthTestEnable;
+			//VkBool32                                  depthWriteEnable;
+			//VkCompareOp                               depthCompareOp;
+			//VkBool32                                  depthBoundsTestEnable;
+			//VkBool32                                  stencilTestEnable;
+			//VkStencilOpState                          front;
+			//VkStencilOpState                          back;
+			//float                                     minDepthBounds;
+			//float                                     maxDepthBounds;
+			VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+			nullptr, 0,
+			VK_FALSE,
+			VK_FALSE,
+			VK_COMPARE_OP_NEVER,
+			VK_FALSE,
+			VK_FALSE,
+			{ VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_NEVER, 0, 0, 0 },
+			{ VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_NEVER, 0, 0, 0 },
+			0.0f,
+			0.0f
+		};
 
-		VkPipelineColorBlendAttachmentState pcbas;
-		memset(&pcbas, 0, sizeof(pcbas));
-		pcbas.colorWriteMask = VK_COLOR_COMPONENT_A_BIT |
-			VK_COLOR_COMPONENT_R_BIT |
-			VK_COLOR_COMPONENT_G_BIT |
-			VK_COLOR_COMPONENT_B_BIT;
+		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentStatus = {
+			//VkBool32                 blendEnable;
+			//VkBlendFactor            srcColorBlendFactor;
+			//VkBlendFactor            dstColorBlendFactor;
+			//VkBlendOp                colorBlendOp;
+			//VkBlendFactor            srcAlphaBlendFactor;
+			//VkBlendFactor            dstAlphaBlendFactor;
+			//VkBlendOp                alphaBlendOp;
+			//VkColorComponentFlags    colorWriteMask;
+			VK_FALSE,
+			VK_BLEND_FACTOR_ZERO,
+			VK_BLEND_FACTOR_ZERO,
+			VK_BLEND_OP_ADD,
+			VK_BLEND_FACTOR_ZERO,
+			VK_BLEND_FACTOR_ZERO,
+			VK_BLEND_OP_ADD,
+			VK_COLOR_COMPONENT_A_BIT | VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT
+		};
 
-		VkPipelineColorBlendStateCreateInfo pcbsci;
-		memset(&pcbsci, 0, sizeof(pcbsci));
-		pcbsci.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		pcbsci.attachmentCount = 1;
-		pcbsci.pAttachments = &pcbas;
+		VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo = {
+			//VkStructureType                               sType;
+			//const void*                                   pNext;
+			//VkPipelineColorBlendStateCreateFlags          flags;
+			//VkBool32                                      logicOpEnable;
+			//VkLogicOp                                     logicOp;
+			//uint32_t                                      attachmentCount;
+			//const VkPipelineColorBlendAttachmentState*    pAttachments;
+			//float                                         blendConstants[4];
+			VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+			nullptr, 0,
+			VK_FALSE,
+			VK_LOGIC_OP_CLEAR,
+			1,
+			&pipelineColorBlendAttachmentStatus,
+			{ 0.0f, 0.0f, 0.0f, 0.0f }
+		};
 
-		VkDynamicState ds[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-		VkPipelineDynamicStateCreateInfo pdsci;
-		memset(&pdsci, 0, sizeof(pdsci));
-		pdsci.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-		pdsci.dynamicStateCount = 2;
-		pdsci.pDynamicStates = ds;
+		VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+		VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo = {
+			//VkStructureType                      sType;
+			//const void*                          pNext;
+			//VkPipelineDynamicStateCreateFlags    flags;
+			//uint32_t                             dynamicStateCount;
+			//const VkDynamicState*                pDynamicStates;
+			VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+			nullptr, 0,
+			2,
+			dynamicStates
+		};
 
 		VkPipeline pipeline{ 0 };
-		VkGraphicsPipelineCreateInfo gpci;
-		memset(&gpci, 0, sizeof(gpci));
-		gpci.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		gpci.stageCount = 2;
-		gpci.pStages = pssci;
-		gpci.pVertexInputState = &pvisci;
-		gpci.pInputAssemblyState = &piasci;
-		gpci.pViewportState = &pvsci;
-		gpci.pRasterizationState = &prsci;
-		gpci.pMultisampleState = &pmsci;
-		gpci.pDepthStencilState = &pdssci;
-		gpci.pColorBlendState = &pcbsci;
-		gpci.pDynamicState = &pdsci;
-		gpci.flags = 0;
-		gpci.layout = pipelineLayout_;
-		gpci.renderPass = context_.renderPass();
-		gpci.subpass = 0;
-		gpci.basePipelineHandle = VK_NULL_HANDLE;
-		gpci.basePipelineIndex = -1;
-		vkCreateGraphicsPipelines(context_.device(), pc, 1, &gpci, nullptr, &pipeline_);
+		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {
+			//VkStructureType                                  sType;
+			//const void*                                      pNext;
+			//VkPipelineCreateFlags                            flags;
+			//uint32_t                                         stageCount;
+			//const VkPipelineShaderStageCreateInfo*           pStages;
+			//const VkPipelineVertexInputStateCreateInfo*      pVertexInputState;
+			//const VkPipelineInputAssemblyStateCreateInfo*    pInputAssemblyState;
+			//const VkPipelineTessellationStateCreateInfo*     pTessellationState;
+			//const VkPipelineViewportStateCreateInfo*         pViewportState;
+			//const VkPipelineRasterizationStateCreateInfo*    pRasterizationState;
+			//const VkPipelineMultisampleStateCreateInfo*      pMultisampleState;
+			//const VkPipelineDepthStencilStateCreateInfo*     pDepthStencilState;
+			//const VkPipelineColorBlendStateCreateInfo*       pColorBlendState;
+			//const VkPipelineDynamicStateCreateInfo*          pDynamicState;
+			//VkPipelineLayout                                 layout;
+			//VkRenderPass                                     renderPass;
+			//uint32_t                                         subpass;
+			//VkPipeline                                       basePipelineHandle;
+			//int32_t                                          basePipelineIndex;
+			VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+			nullptr, 0,
+			2, pipelineShaderStageCreateInfos,
+			&pipelineVertexInputStateCreateInfo,
+			&pipelineInputAssemblyStateCreateInfo,
+			&pipelineTessellationStateCreateInfo,
+			&pipelineViewportStateCreateInfo,
+			&pipelineRasterizationStateCreateInfo,
+			&pipelineMultisampleStateCreateInfo,
+			&pipelineDepthStencilStateCreateInfo,
+			&pipelineColorBlendStateCreateInfo,
+			&pipelineDynamicStateCreateInfo,
+			pipelineLayout_,
+			context_.renderPass(),
+			0,
+			VK_NULL_HANDLE,
+			-1
+		};
+		vkCreateGraphicsPipelines(context_.device(), pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline_);
 
 		vertex_offset_ = sizeof(struct ubo);
 		colors_offset_ = vertex_offset_ + sizeof(vVertices);
 		normals_offset_ = colors_offset_ + sizeof(vColors);
-		uint32_t mem_size = normals_offset_ + sizeof(vNormals);
+		uint32_t allocationSize = normals_offset_ + sizeof(vNormals);
 
-		VkBufferCreateInfo bci;
-		memset(&bci, 0, sizeof(bci));
-		bci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bci.size = mem_size;
-		bci.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		bci.flags = 0;
+		VkBufferCreateInfo bufferCreateInfo = {
+			//VkStructureType        sType;
+			//const void*            pNext;
+			//VkBufferCreateFlags    flags;
+			//VkDeviceSize           size;
+			//VkBufferUsageFlags     usage;
+			//VkSharingMode          sharingMode;
+			//uint32_t               queueFamilyIndexCount;
+			//const uint32_t*        pQueueFamilyIndices;
+			VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			nullptr, 0,
+			allocationSize,
+			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+			VK_SHARING_MODE_EXCLUSIVE,
+			0, nullptr
+		};
+		vkCreateBuffer(context_.device(), &bufferCreateInfo, nullptr, &buffer_);
 
-		vkCreateBuffer(context_.device(), &bci, nullptr, &buffer_);
-
-		VkMemoryRequirements reqs;
-		vkGetBufferMemoryRequirements(context_.device(), buffer_, &reqs);
-		int memory_type = context_.findMemoryType(reqs.memoryTypeBits);
-		if (memory_type < 0) {
+		VkMemoryRequirements memoryRequirements;
+		vkGetBufferMemoryRequirements(context_.device(), buffer_, &memoryRequirements);
+		int memoryTypeIndex = context_.findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
+		if (memoryTypeIndex < 0) {
 			throw std::runtime_error("memory type bits failed");
 		}
 
-		VkMemoryAllocateInfo mai;
-		memset(&mai, 0, sizeof(mai));
-		mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		mai.allocationSize = mem_size;
-		mai.memoryTypeIndex = memory_type;
-		vkAllocateMemory(context_.device(), &mai, nullptr, &deviceMemory_);
-
-		if (VK_SUCCESS != vkMapMemory(context_.device(), deviceMemory_, 0, mem_size, 0, (void**)&map_)) {
-			throw std::runtime_error("vkMemoryMap failed");
+		VkMemoryAllocateInfo memoryAllocationInfo = {
+			//VkStructureType    sType;
+			//const void*        pNext;
+			//VkDeviceSize       allocationSize;
+			//uint32_t           memoryTypeIndex;
+			VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+			nullptr,
+			allocationSize,
+			(uint32_t)memoryTypeIndex
+		};
+		switch (vkAllocateMemory(context_.device(), &memoryAllocationInfo, nullptr, &deviceMemory_)) {
+		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
+		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
+		case VK_ERROR_TOO_MANY_OBJECTS:                   throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_TOO_MANY_OBJECTS");
+		case VK_ERROR_INVALID_EXTERNAL_HANDLE:            throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_EXTERNAL_HANDLE");
+		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
 		}
+
+		switch (vkMapMemory(context_.device(), deviceMemory_, 0, allocationSize, 0, (void**)&map_)) {
+		case VK_ERROR_OUT_OF_HOST_MEMORY:   throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
+		case VK_ERROR_OUT_OF_DEVICE_MEMORY: throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
+		case VK_ERROR_MEMORY_MAP_FAILED:    throw std::runtime_error("vkMapMemory() -> VK_ERROR_MEMORY_MAP_FAILED");
+		}
+
+		switch (vkBindBufferMemory(context_.device(), buffer_, deviceMemory_, 0)) {
+		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
+		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
+		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
+		};
+
 		memcpy(map_ + vertex_offset_, vVertices, sizeof(vVertices));
 		memcpy(map_ + colors_offset_, vColors, sizeof(vColors));
 		memcpy(map_ + normals_offset_, vNormals, sizeof(vNormals));
 
-		vkBindBufferMemory(context_.device(), buffer_, deviceMemory_, 0);
+		VkDescriptorPoolSize descriptorPoolSizes[] = {
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+		};
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {
+			//VkStructureType                sType;
+			//const void*                    pNext;
+			//VkDescriptorPoolCreateFlags    flags;
+			//uint32_t                       maxSets;
+			//uint32_t                       poolSizeCount;
+			//const VkDescriptorPoolSize*    pPoolSizes;
+			VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+			nullptr, 0,
+			1,
+			1, descriptorPoolSizes
+		};
+		VkDescriptorPool descriptorPool;
+		vkCreateDescriptorPool(context_.device(), &descriptorPoolCreateInfo, NULL, &descriptorPool);
 
-		VkDescriptorPoolSize dps;
-		memset(&dps, 0, sizeof(dps));
-		dps.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		dps.descriptorCount = 1;
-		VkDescriptorPool desc_pool;
-		VkDescriptorPoolCreateInfo dpci;
-		memset(&dpci, 0, sizeof(dpci));
-		dpci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		dpci.pNext = NULL;
-		dpci.flags = 0;
-		dpci.maxSets = 1;
-		dpci.poolSizeCount = 1;
-		dpci.pPoolSizes = &dps;
-		vkCreateDescriptorPool(context_.device(), &dpci, NULL, &desc_pool);
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
+			//VkStructureType                 sType;
+			//const void*                     pNext;
+			//VkDescriptorPool                descriptorPool;
+			//uint32_t                        descriptorSetCount;
+			//const VkDescriptorSetLayout*    pSetLayouts;
+			VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			nullptr,
+			descriptorPool,
+			1, &descriptorSetLayout
+		};
+		vkAllocateDescriptorSets(context_.device(), &descriptorSetAllocateInfo, &descriptorSet_);
 
-		VkDescriptorSetAllocateInfo dsai;
-		memset(&dsai, 0, sizeof(dsai));
-		dsai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		dsai.descriptorPool = desc_pool;
-		dsai.descriptorSetCount = 1;
-		dsai.pSetLayouts = &set_layout;
-		vkAllocateDescriptorSets(context_.device(), &dsai, &descriptorSet_);
+		VkDescriptorBufferInfo descriptorBufferInfo = {
+			//VkBuffer        buffer;
+			//VkDeviceSize    offset;
+			//VkDeviceSize    range;
+			buffer_, 0, sizeof(struct ubo)
+		};
 
-		VkDescriptorBufferInfo dbi;
-		memset(&dbi, 0, sizeof(dbi));
-		dbi.buffer = buffer_;
-		dbi.offset = 0;
-		dbi.range = sizeof(struct ubo);
+		VkWriteDescriptorSet writeDescriptorSet = {
+			//VkStructureType                  sType;
+			//const void*                      pNext;
+			//VkDescriptorSet                  dstSet;
+			//uint32_t                         dstBinding;
+			//uint32_t                         dstArrayElement;
+			//uint32_t                         descriptorCount;
+			//VkDescriptorType                 descriptorType;
+			//const VkDescriptorImageInfo*     pImageInfo;
+			//const VkDescriptorBufferInfo*    pBufferInfo;
+			//const VkBufferView*              pTexelBufferView;
+			VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			nullptr,
+			descriptorSet_,
+			0,
+			0,
+			1,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			nullptr,
+			&descriptorBufferInfo,
+			nullptr
+		};
+		vkUpdateDescriptorSets(context_.device(), 1, &writeDescriptorSet, 0, nullptr);
 
-		VkWriteDescriptorSet wds;
-		memset(&wds, 0, sizeof(wds));
-		wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		wds.dstSet = descriptorSet_;
-		wds.dstBinding = 0;
-		wds.dstArrayElement = 0;
-		wds.descriptorCount = 1;
-		wds.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		wds.pBufferInfo = &dbi;
 
-		vkUpdateDescriptorSets(context_.device(), 1, &wds, 0, nullptr);
+		struct ubo ubo;
+		size_t uboOffset = 0;
+		size_t uboSize = sizeof(struct ubo);
+		size_t vboOffset = uboOffset + uboSize;
+		size_t vboSize = sizeof(Vertex) * vertices.size();
+		if (vbuffer.init(&context_, uboSize + vboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)) {
+			vbuffer.copyToMap(uboOffset, &ubo, uboSize);
+			vbuffer.copyToMap(vboOffset, &vertices[0], vboSize);
+		}
 
 		return true;
 	}
 
 
 	void VulkanConfig::kill() {
-
+		vbuffer.kill();
 	}
 
 
 	void VulkanConfig::use(float t) {
 		struct ubo ubo;
-		ubo.modelview.translate({ -1.0f, -2.0f, -8.0f });
-		ubo.modelview.scale({ 1.5f,2.5f,3.5f });
-		//ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		//ubo.modelview.rotate(45.0f - (0.5f * t), { 0.0f, 1.0f, 0.0f });
-		//ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
+		ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		ubo.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
+		ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
 		float aspect = (float)context_.width() / (float)context_.height();
 		FxMatrix4f projection;
-		projection.perspective(45.0f, aspect, 0.01f, 100.0f);
-		ubo.modelviewprojection = ubo.modelview * projection;
-
-		// The mat3 normalMatrix is laid out as 3 vec4s. 
+		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
+		ubo.modelviewprojection = projection * ubo.modelview;
+		ubo.color.g = 0.5f * sin(t) + 0.5f;
 		memcpy(ubo.normal, &ubo.modelview, sizeof(ubo.normal));
 		memcpy(map_, &ubo, sizeof(ubo));
 
-		vkWaitForFences(context_.device(), 1, &context_.fence(), VK_TRUE, UINT64_MAX);
-		vkResetFences(context_.device(), 1, &context_.fence());
-
-		VkCommandBufferBeginInfo commandBufferBeginInfo;
-		memset(&commandBufferBeginInfo, 0, sizeof(commandBufferBeginInfo));
-		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		commandBufferBeginInfo.flags = 0;
-		vkBeginCommandBuffer(context_.commandBuffer(), &commandBufferBeginInfo);
-
-		VkClearValue clearValue;
-		clearValue.color.float32[0] = clearColor_.r;
-		clearValue.color.float32[1] = clearColor_.g;
-		clearValue.color.float32[2] = clearColor_.b;
-		clearValue.color.float32[3] = clearColor_.a;
-
-		VkRenderPassBeginInfo renderPassBeginInfo;
-		memset(&renderPassBeginInfo, 0, sizeof(renderPassBeginInfo));
-		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.renderPass = context_.renderPass();
-		renderPassBeginInfo.framebuffer = context_.framebuffer();
-		renderPassBeginInfo.renderArea.offset.x = 0;
-		renderPassBeginInfo.renderArea.offset.y = 0;
-		renderPassBeginInfo.renderArea.extent.width = context_.width();
-		renderPassBeginInfo.renderArea.extent.height = context_.height();
-		renderPassBeginInfo.clearValueCount = 1;
-		renderPassBeginInfo.pClearValues = &clearValue;
-		vkCmdBeginRenderPass(context_.commandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
 		VkBuffer buffers[] = { buffer_, buffer_, buffer_ };
-		VkDeviceSize deviceSizes[] = { vertex_offset_, colors_offset_, normals_offset_ };
-		vkCmdBindVertexBuffers(context_.commandBuffer(), 0, 3, buffers, deviceSizes);
+		VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
+		vkCmdBindVertexBuffers(context_.commandBuffer(), 0, 3, buffers, offsets);
 		vkCmdBindPipeline(context_.commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 		vkCmdBindDescriptorSets(context_.commandBuffer(),
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
