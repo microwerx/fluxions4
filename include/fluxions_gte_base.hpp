@@ -85,13 +85,10 @@ struct FxMatrix4f {
 	}
 
 	FxMatrix4f& rotate(float angleInDegrees, FxVector3f v) {
-		float angleInRadians = angleInDegrees * 180.0f / 3.141592653f;
+		float angleInRadians = angleInDegrees * 3.141592653f / 180.0f;
 		float c = cos(angleInRadians);
 		float s = sin(angleInRadians);
-		float invLength = (float)(1.0 / sqrt(v.x * v.x + v.y * v.y + v.z * v.z));
-		v.x *= invLength;
-		v.y *= invLength;
-		v.z *= invLength;
+		v = normalize(v);
 
 		*this = *this * FxMatrix4f(
 			v.x * v.x * (1 - c) + c, v.x * v.y * (1 - c) - v.z * s, v.x * v.z * (1 - c) + v.y * s, 0.0,
@@ -167,7 +164,7 @@ struct FxMatrix4f {
 	}
 
 	FxMatrix4f& perspective(float angleInDegrees, float aspect, float nearZ, float farZ) {
-		float f = (1.0f / std::tan(180.0f / 3.141592653f * 0.5f * angleInDegrees));
+		float f = (1.0f / std::tan(3.141592653f / 180.0f * 0.5f * angleInDegrees));
 
 		*this = *this * FxMatrix4f(
 			f / aspect, 0.0f, 0.0f, 0.0f,
