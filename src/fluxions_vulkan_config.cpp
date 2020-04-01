@@ -380,7 +380,8 @@ namespace Fluxions {
 		ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
 		float aspect = (float)context_.height() / (float)context_.width();
 		FxMatrix4f projection;
-		projection.frustum(-2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
+        projection.perspective(45.0f, aspect, 1.0f, 100.0f);
+		// projection.frustum(-2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
 		ubo.modelviewprojection = ubo.modelview * projection;
 
 		// The mat3 normalMatrix is laid out as 3 vec4s. 
