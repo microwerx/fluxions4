@@ -28,7 +28,7 @@ namespace Fluxions {
 			if (!_enumerateDevices()) return false;
 			if (!_checkQueueFamilyProperties()) return false;
 			if (!_createDevice()) return false;
-			if (!_createSurface()) return false;
+			if (!_createSDLVulkanSurface()) return false;
 			if (!_chooseSurfaceFormat()) return false;
 			if (!_createRenderPass()) return false;
 			if (!_createCommandPool()) return false;
@@ -206,7 +206,28 @@ namespace Fluxions {
 			HFLOGINFO("vendor id:    %04x", pdProperties_.vendorID);
 			HFLOGINFO("vendor name:  %s", pdProperties_.deviceName);
 			HFLOGINFO("memory heaps: %d", pdMemoryProperties_.memoryHeapCount);
+			for (int j = 0; j < pdMemoryProperties_.memoryHeapCount; j++) {
+				auto f = pdMemoryProperties_.memoryHeaps[j].flags;
+				if (!f) continue;
+				HFLOGINFO("memory heap size:       %zu", pdMemoryProperties_.memoryHeaps[j].size);
+				if (f & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) HFLOGINFO("memory heap properties: Device local");
+				if (f & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT) HFLOGINFO("memory heap properties: Multiple instance");
+			}
 			HFLOGINFO("memory types: %d", pdMemoryProperties_.memoryTypeCount);
+			for (int j = 0; j < pdMemoryProperties_.memoryTypeCount; j++) {
+				auto f = pdMemoryProperties_.memoryTypes[j].propertyFlags;
+				if (!f) continue;
+				HFLOGINFO("memory type index:      %d", pdMemoryProperties_.memoryTypes[j].heapIndex);
+				if (f & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) HFLOGINFO("memory type properties: Device local");
+				if (f & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) HFLOGINFO("memory type properties: Host visible");
+				if (f & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) HFLOGINFO("memory type properties: Host coherent");
+				if (f & VK_MEMORY_PROPERTY_HOST_CACHED_BIT) HFLOGINFO("memory type properties: Host cached");
+				if (f & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) HFLOGINFO("memory type properties: Lazily allocated");
+				if (f & VK_MEMORY_PROPERTY_PROTECTED_BIT) HFLOGINFO("memory type properties: Protected");
+				if (f & VK_MEMORY_PROPERTY_DEVICE_COHERENT_BIT_AMD) HFLOGINFO("memory type properties: Device coherent (AMD)");
+				if (f & VK_MEMORY_PROPERTY_DEVICE_UNCACHED_BIT_AMD) HFLOGINFO("memory type properties: Device uncached (AMD)");
+			}
+			HFLOGINFO("-------");
 		}
 		return true;
 	}
@@ -218,6 +239,7 @@ namespace Fluxions {
 		if (count) {
 			pdQueueFamilyProperties_.resize(count);
 			vkGetPhysicalDeviceQueueFamilyProperties(pd_, &count, &pdQueueFamilyProperties_[0]);
+
 			if (!(pdQueueFamilyProperties_[0].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
 				throw std::runtime_error("VK_QUEUE_GRAPHICS_BIT not set");
 			}
@@ -254,7 +276,7 @@ namespace Fluxions {
 	}
 
 
-	bool VulkanContext::_createSurface() {
+	bool VulkanContext::_createSDLVulkanSurface() {
 		if (!SDL_Vulkan_CreateSurface(window_, instance_, &surface_)) {
 			// surface not creted
 			throw std::runtime_error(SDL_GetError());

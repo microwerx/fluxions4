@@ -131,9 +131,7 @@ namespace Fluxions {
 
 
 	VulkanConfig::VulkanConfig(VulkanContext& vc) :
-		context_(vc) {
-
-	}
+		context_(&vc) {}
 
 
 	VulkanConfig::~VulkanConfig() {
@@ -159,7 +157,7 @@ namespace Fluxions {
 		};
 
 		VkDescriptorSetLayout descriptorSetLayout;
-		vkCreateDescriptorSetLayout(context_.device(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout);
+		vkCreateDescriptorSetLayout(context_->device(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout);
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, // sType
@@ -170,7 +168,7 @@ namespace Fluxions {
 			0,                       // pushConstantRangeCount
 			nullptr                  // pPushConstantRanges
 		};
-		vkCreatePipelineLayout(context_.device(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout_);
+		vkCreatePipelineLayout(context_->device(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout_);
 
 		VkVertexInputBindingDescription vertexInputBindingDescriptions[3] = {
 			//uint32_t             binding;
@@ -217,7 +215,7 @@ namespace Fluxions {
 			(uint32_t*)vs_spirv_source
 		};
 		VkShaderModule vsShaderModule;
-		vkCreateShaderModule(context_.device(), &vsShaderModuleCreateInfo, nullptr, &vsShaderModule);
+		vkCreateShaderModule(context_->device(), &vsShaderModuleCreateInfo, nullptr, &vsShaderModule);
 
 		VkShaderModuleCreateInfo fsShaderModuleCreateInfo = {
 			VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -226,7 +224,7 @@ namespace Fluxions {
 			(uint32_t*)fs_spirv_source
 		};
 		VkShaderModule fsShaderModule;
-		vkCreateShaderModule(context_.device(), &fsShaderModuleCreateInfo, nullptr, &fsShaderModule);
+		vkCreateShaderModule(context_->device(), &fsShaderModuleCreateInfo, nullptr, &fsShaderModule);
 
 		VkPipelineCache pipelineCache = VK_NULL_HANDLE;
 		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfos[2] = {
@@ -434,12 +432,12 @@ namespace Fluxions {
 			&pipelineColorBlendStateCreateInfo,
 			&pipelineDynamicStateCreateInfo,
 			pipelineLayout_,
-			context_.renderPass(),
+			context_->renderPass(),
 			0,
 			VK_NULL_HANDLE,
 			-1
 		};
-		vkCreateGraphicsPipelines(context_.device(), pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline_);
+		vkCreateGraphicsPipelines(context_->device(), pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline_);
 
 		vertex_offset_ = sizeof(struct ubo);
 		colors_offset_ = vertex_offset_ + sizeof(vVertices);
@@ -462,11 +460,11 @@ namespace Fluxions {
 			VK_SHARING_MODE_EXCLUSIVE,
 			0, nullptr
 		};
-		vkCreateBuffer(context_.device(), &bufferCreateInfo, nullptr, &buffer_);
+		vkCreateBuffer(context_->device(), &bufferCreateInfo, nullptr, &buffer_);
 
 		VkMemoryRequirements memoryRequirements;
-		vkGetBufferMemoryRequirements(context_.device(), buffer_, &memoryRequirements);
-		int memoryTypeIndex = context_.findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
+		vkGetBufferMemoryRequirements(context_->device(), buffer_, &memoryRequirements);
+		int memoryTypeIndex = context_->findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
 		if (memoryTypeIndex < 0) {
 			throw std::runtime_error("memory type bits failed");
 		}
@@ -481,7 +479,7 @@ namespace Fluxions {
 			allocationSize,
 			(uint32_t)memoryTypeIndex
 		};
-		switch (vkAllocateMemory(context_.device(), &memoryAllocationInfo, nullptr, &deviceMemory_)) {
+		switch (vkAllocateMemory(context_->device(), &memoryAllocationInfo, nullptr, &deviceMemory_)) {
 		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
 		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
 		case VK_ERROR_TOO_MANY_OBJECTS:                   throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_TOO_MANY_OBJECTS");
@@ -489,13 +487,13 @@ namespace Fluxions {
 		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
 		}
 
-		switch (vkMapMemory(context_.device(), deviceMemory_, 0, allocationSize, 0, (void**)&map_)) {
+		switch (vkMapMemory(context_->device(), deviceMemory_, 0, allocationSize, 0, (void**)&map_)) {
 		case VK_ERROR_OUT_OF_HOST_MEMORY:   throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
 		case VK_ERROR_OUT_OF_DEVICE_MEMORY: throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
 		case VK_ERROR_MEMORY_MAP_FAILED:    throw std::runtime_error("vkMapMemory() -> VK_ERROR_MEMORY_MAP_FAILED");
 		}
 
-		switch (vkBindBufferMemory(context_.device(), buffer_, deviceMemory_, 0)) {
+		switch (vkBindBufferMemory(context_->device(), buffer_, deviceMemory_, 0)) {
 		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
 		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
 		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
@@ -521,7 +519,7 @@ namespace Fluxions {
 			1, descriptorPoolSizes
 		};
 		VkDescriptorPool descriptorPool;
-		vkCreateDescriptorPool(context_.device(), &descriptorPoolCreateInfo, NULL, &descriptorPool);
+		vkCreateDescriptorPool(context_->device(), &descriptorPoolCreateInfo, NULL, &descriptorPool);
 
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
 			//VkStructureType                 sType;
@@ -534,7 +532,7 @@ namespace Fluxions {
 			descriptorPool,
 			1, &descriptorSetLayout
 		};
-		vkAllocateDescriptorSets(context_.device(), &descriptorSetAllocateInfo, &descriptorSet_);
+		vkAllocateDescriptorSets(context_->device(), &descriptorSetAllocateInfo, &descriptorSet_);
 
 		VkDescriptorBufferInfo descriptorBufferInfo = {
 			//VkBuffer        buffer;
@@ -565,7 +563,7 @@ namespace Fluxions {
 			&descriptorBufferInfo,
 			nullptr
 		};
-		vkUpdateDescriptorSets(context_.device(), 1, &writeDescriptorSet, 0, nullptr);
+		vkUpdateDescriptorSets(context_->device(), 1, &writeDescriptorSet, 0, nullptr);
 
 
 		struct ubo ubo;
@@ -573,7 +571,7 @@ namespace Fluxions {
 		size_t uboSize = sizeof(struct ubo);
 		size_t vboOffset = uboOffset + uboSize;
 		size_t vboSize = sizeof(Vertex) * vertices.size();
-		if (vbuffer.init(&context_, uboSize + vboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)) {
+		if (vbuffer.init(context_, uboSize + vboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)) {
 			vbuffer.copyToMap(uboOffset, &ubo, uboSize);
 			vbuffer.copyToMap(vboOffset, &vertices[0], vboSize);
 		}
@@ -584,6 +582,7 @@ namespace Fluxions {
 
 	void VulkanConfig::kill() {
 		vbuffer.kill();
+		vkDestroyPipeline(context_->device(), pipeline_, nullptr);
 	}
 
 
@@ -593,7 +592,7 @@ namespace Fluxions {
 		ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
 		ubo.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
 		ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
-		float aspect = (float)context_.width() / (float)context_.height();
+		float aspect = (float)context_->width() / (float)context_->height();
 		FxMatrix4f projection;
 		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
 		ubo.modelviewprojection = projection * ubo.modelview;
@@ -603,9 +602,9 @@ namespace Fluxions {
 
 		VkBuffer buffers[] = { buffer_, buffer_, buffer_ };
 		VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
-		vkCmdBindVertexBuffers(context_.commandBuffer(), 0, 3, buffers, offsets);
-		vkCmdBindPipeline(context_.commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
-		vkCmdBindDescriptorSets(context_.commandBuffer(),
+		vkCmdBindVertexBuffers(context_->commandBuffer(), 0, 3, buffers, offsets);
+		vkCmdBindPipeline(context_->commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
+		vkCmdBindDescriptorSets(context_->commandBuffer(),
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
 								pipelineLayout_,
 								0, 1,
@@ -614,29 +613,29 @@ namespace Fluxions {
 		VkViewport viewport;
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)context_.width();
-		viewport.height = (float)context_.height();
+		viewport.width = (float)context_->width();
+		viewport.height = (float)context_->height();
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(context_.commandBuffer(), 0, 1, &viewport);
+		vkCmdSetViewport(context_->commandBuffer(), 0, 1, &viewport);
 
 		VkRect2D scissor;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		scissor.extent.width = context_.width();
-		scissor.extent.height = context_.height();
-		vkCmdSetScissor(context_.commandBuffer(), 0, 1, &scissor);
+		scissor.extent.width = context_->width();
+		scissor.extent.height = context_->height();
+		vkCmdSetScissor(context_->commandBuffer(), 0, 1, &scissor);
 
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 0, 0);
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 4, 0);
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 8, 0);
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 12, 0);
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 16, 0);
-		vkCmdDraw(context_.commandBuffer(), 4, 1, 20, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 0, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 4, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 8, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 12, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 16, 0);
+		vkCmdDraw(context_->commandBuffer(), 4, 1, 20, 0);
 
-		vkCmdEndRenderPass(context_.commandBuffer());
+		vkCmdEndRenderPass(context_->commandBuffer());
 
-		vkEndCommandBuffer(context_.commandBuffer());
+		vkEndCommandBuffer(context_->commandBuffer());
 	}
 
 
