@@ -56,13 +56,14 @@ public:
 					}
 				}
 			}
+
+			vcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
 			vcontext.beginFrame();
 			
-			vconfig.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
-			vconfig.use(t1);
+			vconfig.use(t1 * 30.0f);
 			vconfig.restore();
 
-			vcontext.swapBuffers();
+			vcontext.presentFrame();
 		}
 	}
 
