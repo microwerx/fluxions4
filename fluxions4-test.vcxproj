@@ -151,29 +151,57 @@
     <ClCompile Include="src\fluxions_vulkan_context.cpp" />
     <ClCompile Include="src\hatchetfish_log.cpp" />
     <ClCompile Include="src\hatchetfish_stopwatch.cpp" />
-    <ClCompile Include="vkcube\cube.c" />
-    <ClCompile Include="vkcube\esTransform.c" />
-    <ClCompile Include="vkcube\main.c" />
-    <ClCompile Include="vkcube\xdg-shell-protocol.c" />
+    <ClCompile Include="vkcube\cube.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vkcube\esTransform.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vkcube\main.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="vkcube\xdg-shell-protocol.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vkcube.frag" />
     <None Include="src\vkcube.frag.spv.h.in" />
     <None Include="src\vkcube.vert" />
     <None Include="src\vkcube.vert.spv.h.in" />
-    <None Include="vkcube\vkcube.frag" />
-    <None Include="vkcube\vkcube.vert" />
+    <None Include="vkcube\vkcube.frag">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="vkcube\vkcube.vert">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\fluxions_gte_base.hpp" />
+    <ClInclude Include="include\fluxions_gte_matrix4.hpp" />
     <ClInclude Include="include\fluxions_vulkan_config.hpp" />
     <ClInclude Include="include\fluxions_vulkan_context.hpp" />
     <ClInclude Include="include\hatchetfish.hpp" />
     <ClInclude Include="include\hatchetfish_log.hpp" />
     <ClInclude Include="include\hatchetfish_stopwatch.hpp" />
-    <ClInclude Include="vkcube\common.h" />
-    <ClInclude Include="vkcube\esUtil.h" />
-    <ClInclude Include="vkcube\xdg-shell-protocol.h" />
+    <ClInclude Include="vkcube\common.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="vkcube\esUtil.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="vkcube\xdg-shell-protocol.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -27,9 +27,6 @@
     <ClCompile Include="src\hatchetfish_stopwatch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vkcube\cube.c">
-      <Filter>vkCube</Filter>
-    </ClCompile>
     <ClCompile Include="vkcube\esTransform.c">
       <Filter>vkCube</Filter>
     </ClCompile>
@@ -44,6 +41,9 @@
     </ClCompile>
     <ClCompile Include="src\fluxions_vulkan_config.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vkcube\cube.c">
+      <Filter>vkCube</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +92,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\fluxions_vulkan_config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions_gte_matrix4.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
