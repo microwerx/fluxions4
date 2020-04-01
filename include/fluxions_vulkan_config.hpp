@@ -12,9 +12,27 @@ namespace Fluxions {
 
 		bool init();
 		void kill();
-	private:
 
-		VulkanContext& vc_;
+		void use(float t);
+		void restore();
+
+		void setContext(VulkanContext& vc) { context_ = vc; }
+		void setClearColor(FxColor4f clearColor) { clearColor_ = clearColor; }
+
+	private:
+		VulkanContext& context_;
+		FxColor4f clearColor_;
+
+		VkPipelineLayout pipelineLayout_{ nullptr };
+		VkPipeline pipeline_{ nullptr };
+
+		uint8_t* map_{ nullptr };
+		uint32_t vertex_offset_{ 0 };
+		uint32_t colors_offset_{ 0 };
+		uint32_t normals_offset_{ 0 };
+		VkBuffer buffer_{ nullptr };
+		VkDeviceMemory deviceMemory_{ nullptr };
+		VkDescriptorSet descriptorSet_{ nullptr };
 	};
 }
 
