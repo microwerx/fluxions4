@@ -452,17 +452,6 @@ namespace Fluxions {
 		vkCmdEndRenderPass(context_.commandBuffer());
 
 		vkEndCommandBuffer(context_.commandBuffer());
-
-		VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSubmitInfo submitInfo;
-		memset(&submitInfo, 0, sizeof(submitInfo));
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &context_.semaphore();
-		submitInfo.pWaitDstStageMask = pipelineStageFlags;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &context_.commandBuffer();
-		vkQueueSubmit(context_.queue(), 1, &submitInfo, context_.fence());
 	}
 
 
