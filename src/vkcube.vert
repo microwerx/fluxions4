@@ -4,6 +4,7 @@ layout(std140, set = 0, binding = 0) uniform block {
     uniform mat4 modelviewMatrix;
     uniform mat4 modelviewprojectionMatrix;
     uniform mat3 normalMatrix;
+    uniform vec4 color;
 };
 
 layout(location = 0) in vec4 in_position;
