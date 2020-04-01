@@ -62,8 +62,14 @@ namespace Fluxions {
 	bool VulkanContext::beginFrame() {
 		VkResult result =
 			vkAcquireNextImageKHR(device_, swapchain_, UINT64_MAX, semaphore_, VK_NULL_HANDLE, &frameImageIndex_);
-		return (result == VK_SUCCESS) && (frameImageIndex_ < MAX_FRAMES_IN_QUEUE);
+		if (result != VK_SUCCESS) return false;
+		if (frameImageIndex_ >= MAX_FRAMES_IN_QUEUE) return false;
+
+		return true;
 	}
+
+
+
 
 
 	void VulkanContext::clearScreen(FxColor4f color) {
@@ -93,19 +99,29 @@ namespace Fluxions {
 
 
 	void VulkanContext::swapBuffers() {
-		VkResult result;
+		VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		VkSubmitInfo submitInfo;
+		memset(&submitInfo, 0, sizeof(submitInfo));
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &semaphore_;
+		submitInfo.pWaitDstStageMask = pipelineStageFlags;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &swapchainFramebuffers_[frameImageIndex_].commandBuffer_;
+		vkQueueSubmit(queue_, 1, &submitInfo, swapchainFramebuffers_[frameImageIndex_].fence_);
 
+		VkResult result;
 		VkSwapchainKHR swapchains[] = { swapchain_ };
 		uint32_t imageIndices[] = { frameImageIndex_ };
-		VkPresentInfoKHR pi;
-		memset(&pi, 0, sizeof(pi));
-		pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		pi.swapchainCount = 1;
-		pi.pSwapchains = swapchains;
-		pi.pImageIndices = imageIndices;
-		pi.pResults = &result;
+		VkPresentInfoKHR presentInfo;
+		memset(&presentInfo, 0, sizeof(presentInfo));
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = swapchains;
+		presentInfo.pImageIndices = imageIndices;
+		presentInfo.pResults = &result;
 
-		if (vkQueuePresentKHR(queue_, &pi) != VK_SUCCESS) {
+		if (vkQueuePresentKHR(queue_, &presentInfo) != VK_SUCCESS) {
 			throw std::runtime_error("Unable to swap buffers");
 		}
 
@@ -192,13 +208,15 @@ namespace Fluxions {
 		if (!count) { throw std::runtime_error("no physical devices found"); }
 
 		vkEnumeratePhysicalDevices(instance_, &count, &physicalDevices_[0]);
-		pd_ = physicalDevices_[0];
-		vkGetPhysicalDeviceProperties(pd_, &pdProperties_);
-		vkGetPhysicalDeviceMemoryProperties(pd_, &pdMemoryProperties_);
-		HFLOGINFO("vendor id:    %04x", pdProperties_.vendorID);
-		HFLOGINFO("vendor name:  %s", pdProperties_.deviceName);
-		HFLOGINFO("memory heaps: %d", pdMemoryProperties_.memoryHeapCount);
-		HFLOGINFO("memory types: %d", pdMemoryProperties_.memoryTypeCount);
+		for (int i = count - 1; i >= 0; --i) {
+			pd_ = physicalDevices_[i];
+			vkGetPhysicalDeviceProperties(pd_, &pdProperties_);
+			vkGetPhysicalDeviceMemoryProperties(pd_, &pdMemoryProperties_);
+			HFLOGINFO("vendor id:    %04x", pdProperties_.vendorID);
+			HFLOGINFO("vendor name:  %s", pdProperties_.deviceName);
+			HFLOGINFO("memory heaps: %d", pdMemoryProperties_.memoryHeapCount);
+			HFLOGINFO("memory types: %d", pdMemoryProperties_.memoryTypeCount);
+		}
 		return true;
 	}
 
