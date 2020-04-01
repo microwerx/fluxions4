@@ -27,9 +27,10 @@ namespace Fluxions {
 		bool init() noexcept(false);
 		void kill();
 
+		void setClearColor(FxColor4f color4) { memcpy(&clearValues[0].color, &color4, sizeof(FxColor4f)); }
+		void setClearDepthStencil(float depth, uint32_t stencil) { clearValues[1].depthStencil.depth = depth, clearValues[1].depthStencil.stencil = stencil; }
 		bool beginFrame();
-		void clearScreen(FxColor4f color4);
-		void swapBuffers();
+		void presentFrame();
 
 		static constexpr uint32_t MIN_FRAMES_IN_QUEUE = 2;
 		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
@@ -39,7 +40,7 @@ namespace Fluxions {
 		VkQueue& queue() { return queue_; }
 		VkRenderPass& renderPass() { return renderPass_; }
 		VkSemaphore& semaphore() { return semaphore_; }
-		int findMemoryType(unsigned allowedMemoryTypeBits) const;
+		int findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
 		uint32_t width() const { return width_; }
 		uint32_t height() const { return height_; }
 
@@ -53,6 +54,8 @@ namespace Fluxions {
 		uint32_t width_{ 1280 };
 		uint32_t height_{ 720 };
 		SDL_Window* window_{ nullptr };
+
+		VkClearValue clearValues[2] = { { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.0f } };
 
 		std::vector<const char*> extensions_{
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME, // This extension allows us to receive debug messages

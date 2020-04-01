@@ -65,40 +65,31 @@ namespace Fluxions {
 		if (result != VK_SUCCESS) return false;
 		if (frameImageIndex_ >= MAX_FRAMES_IN_QUEUE) return false;
 
+		vkWaitForFences(device_, 1, &fence(), VK_TRUE, UINT64_MAX);
+		vkResetFences(device_, 1, &fence());
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo;
+		memset(&commandBufferBeginInfo, 0, sizeof(commandBufferBeginInfo));
+		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		commandBufferBeginInfo.flags = 0;
+		vkBeginCommandBuffer(commandBuffer(), &commandBufferBeginInfo);
+
+		VkRenderPassBeginInfo renderPassBeginInfo = {
+				VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+				nullptr,
+				renderPass(),
+				framebuffer(),
+				{ { 0, 0 }, { width(), height() } },
+				1,
+				clearValues
+		};
+		vkCmdBeginRenderPass(commandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
 		return true;
 	}
 
 
-
-
-
-	void VulkanContext::clearScreen(FxColor4f color) {
-		VkCommandBufferBeginInfo cbbi;
-		cbbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cbbi.pNext = nullptr;
-		cbbi.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-		cbbi.pInheritanceInfo = nullptr;
-
-		VkClearValue clearValue;
-		clearValue.color.float32[0] = color.r;
-		clearValue.color.float32[1] = color.g;
-		clearValue.color.float32[2] = color.b;
-		clearValue.color.float32[3] = color.a;
-		clearValue.depthStencil.depth = 1.0f;
-		clearValue.depthStencil.stencil = 0;
-
-		VkImageSubresourceRange imageRange;
-		imageRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		imageRange.baseMipLevel = 0;
-		imageRange.levelCount = 1;
-		imageRange.baseArrayLayer = 0;
-		imageRange.layerCount = 1;
-
-		std::vector<VkCommandBuffer> m_cmdBufs;
-	}
-
-
-	void VulkanContext::swapBuffers() {
+	void VulkanContext::presentFrame() {
 		VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		VkSubmitInfo submitInfo;
 		memset(&submitInfo, 0, sizeof(submitInfo));
@@ -107,8 +98,8 @@ namespace Fluxions {
 		submitInfo.pWaitSemaphores = &semaphore_;
 		submitInfo.pWaitDstStageMask = pipelineStageFlags;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &swapchainFramebuffers_[frameImageIndex_].commandBuffer_;
-		vkQueueSubmit(queue_, 1, &submitInfo, swapchainFramebuffers_[frameImageIndex_].fence_);
+		submitInfo.pCommandBuffers = &commandBuffer();
+		vkQueueSubmit(queue_, 1, &submitInfo, fence());
 
 		VkResult result;
 		VkSwapchainKHR swapchains[] = { swapchain_ };
@@ -129,7 +120,7 @@ namespace Fluxions {
 	}
 
 
-	int VulkanContext::findMemoryType(unsigned allowedMemoryTypeBits) const {
+	int VulkanContext::findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const {
 		for (unsigned i = 0; (1u << i) <= allowedMemoryTypeBits && i <= pdMemoryProperties_.memoryTypeCount; ++i) {
 			if ((allowedMemoryTypeBits & (1u << i)) &&
 				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
