@@ -147,6 +147,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\fluxions_test.cpp" />
+    <ClCompile Include="src\fluxions_vulkan_buffer.cpp" />
     <ClCompile Include="src\fluxions_vulkan_config.cpp" />
     <ClCompile Include="src\fluxions_vulkan_context.cpp" />
     <ClCompile Include="src\hatchetfish_log.cpp" />
@@ -185,6 +186,7 @@
   <ItemGroup>
     <ClInclude Include="include\fluxions_gte_base.hpp" />
     <ClInclude Include="include\fluxions_gte_matrix4.hpp" />
+    <ClInclude Include="include\fluxions_vulkan_buffer.hpp" />
     <ClInclude Include="include\fluxions_vulkan_config.hpp" />
     <ClInclude Include="include\fluxions_vulkan_context.hpp" />
     <ClInclude Include="include\hatchetfish.hpp" />
