@@ -374,14 +374,14 @@ namespace Fluxions {
 
 	void VulkanConfig::use(float t) {
 		struct ubo ubo;
-		ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
-		ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		ubo.modelview.rotate(45.0f - (0.5f * t), { 0.0f, 1.0f, 0.0f });
-		ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
-		float aspect = (float)context_.height() / (float)context_.width();
+		ubo.modelview.translate({ -1.0f, -2.0f, -8.0f });
+		ubo.modelview.scale({ 1.5f,2.5f,3.5f });
+		//ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		//ubo.modelview.rotate(45.0f - (0.5f * t), { 0.0f, 1.0f, 0.0f });
+		//ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		float aspect = (float)context_.width() / (float)context_.height();
 		FxMatrix4f projection;
-        projection.perspective(45.0f, aspect, 1.0f, 100.0f);
-		// projection.frustum(-2.8f, +2.8f, -2.8f * aspect, +2.8f * aspect, 6.0f, 10.0f);
+		projection.perspective(45.0f, aspect, 0.01f, 100.0f);
 		ubo.modelviewprojection = ubo.modelview * projection;
 
 		// The mat3 normalMatrix is laid out as 3 vec4s. 
