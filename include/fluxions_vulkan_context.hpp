@@ -28,13 +28,24 @@ namespace Fluxions {
 		void kill();
 
 		bool beginFrame();
-		void clearScreen(_Color4f color4);
+		void clearScreen(FxColor4f color4);
 		void swapBuffers();
 
 		static constexpr uint32_t MIN_FRAMES_IN_QUEUE = 2;
 		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
 
-		VkSurfaceKHR surface() { return surface_; }
+		VkSurfaceKHR& surface() { return surface_; }
+		VkDevice& device() { return device_; }
+		VkQueue& queue() { return queue_; }
+		VkRenderPass& renderPass() { return renderPass_; }
+		VkSemaphore& semaphore() { return semaphore_; }
+		int findMemoryType(unsigned allowedMemoryTypeBits) const;
+		uint32_t width() const { return width_; }
+		uint32_t height() const { return height_; }
+
+		VkFence& fence() { return swapchainFramebuffers_[frameImageIndex_].fence_; }
+		VkCommandBuffer& commandBuffer() { return swapchainFramebuffers_[frameImageIndex_].commandBuffer_; }
+		VkFramebuffer& framebuffer() { return swapchainFramebuffers_[frameImageIndex_].framebuffer_; }
 
 	private:
 		std::string name_;
@@ -45,7 +56,10 @@ namespace Fluxions {
 
 		std::vector<const char*> extensions_{
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME, // This extension allows us to receive debug messages
-			VK_KHR_SURFACE_EXTENSION_NAME		// This extension allows us to use KHR Surfaces
+			VK_KHR_SURFACE_EXTENSION_NAME,		// This extension allows us to use KHR Surfaces
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#endif
 		};
 		VkInstance instance_{ nullptr };
 		std::vector<VkPhysicalDevice> physicalDevices_;

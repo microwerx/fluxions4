@@ -66,7 +66,7 @@ namespace Fluxions {
 	}
 
 
-	void VulkanContext::clearScreen(_Color4f color) {
+	void VulkanContext::clearScreen(FxColor4f color) {
 		VkCommandBufferBeginInfo cbbi;
 		cbbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cbbi.pNext = nullptr;
@@ -98,19 +98,29 @@ namespace Fluxions {
 		VkSwapchainKHR swapchains[] = { swapchain_ };
 		uint32_t imageIndices[] = { frameImageIndex_ };
 		VkPresentInfoKHR pi;
-		memset(&pi, 0, sizeof(VkPresentInfoKHR));
+		memset(&pi, 0, sizeof(pi));
 		pi.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		pi.swapchainCount = 1;
 		pi.pSwapchains = swapchains;
 		pi.pImageIndices = imageIndices;
 		pi.pResults = &result;
 
-
 		if (vkQueuePresentKHR(queue_, &pi) != VK_SUCCESS) {
 			throw std::runtime_error("Unable to swap buffers");
 		}
 
 		vkQueueWaitIdle(queue_);
+	}
+
+
+	int VulkanContext::findMemoryType(unsigned allowedMemoryTypeBits) const {
+		for (unsigned i = 0; (1u << i) <= allowedMemoryTypeBits && i <= pdMemoryProperties_.memoryTypeCount; ++i) {
+			if ((allowedMemoryTypeBits & (1u << i)) &&
+				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
+				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+				return (int)i;
+		}
+		return -1;
 	}
 
 
