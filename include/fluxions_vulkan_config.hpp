@@ -17,11 +17,14 @@ namespace Fluxions {
 		void use(float t);
 		void restore();
 
-		void setContext(VulkanContext& vc) { context_ = vc; }
+		void setContext(VulkanContext& vc) { context_ = &vc; }
 		void setClearColor(FxColor4f clearColor) { clearColor_ = clearColor; }
 
 	private:
-		VulkanContext& context_;
+		VulkanContext* context_{ nullptr };
+		VkCommandBuffer commandBuffer() { return context_->commandBuffer(); }
+		VkDevice device() { return context_->device(); }
+
 		FxColor4f clearColor_;
 
 		VkPipelineLayout pipelineLayout_{ nullptr };

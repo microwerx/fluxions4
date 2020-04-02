@@ -186,6 +186,7 @@
   <ItemGroup>
     <ClInclude Include="include\fluxions_gte_base.hpp" />
     <ClInclude Include="include\fluxions_gte_matrix4.hpp" />
+    <ClInclude Include="include\fluxions_ibase_object.hpp" />
     <ClInclude Include="include\fluxions_vulkan_buffer.hpp" />
     <ClInclude Include="include\fluxions_vulkan_config.hpp" />
     <ClInclude Include="include\fluxions_vulkan_context.hpp" />

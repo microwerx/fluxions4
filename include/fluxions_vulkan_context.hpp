@@ -32,15 +32,12 @@ namespace Fluxions {
 		bool beginFrame();
 		void presentFrame();
 
-		static constexpr uint32_t MIN_FRAMES_IN_QUEUE = 2;
-		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
-
 		VkSurfaceKHR& surface() { return surface_; }
 		VkDevice& device() { return device_; }
 		VkQueue& queue() { return queue_; }
 		VkRenderPass& renderPass() { return renderPass_; }
 		VkSemaphore& semaphore() { return semaphore_; }
-		int findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
+		uint32_t findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
 		uint32_t width() const { return width_; }
 		uint32_t height() const { return height_; }
 
@@ -78,7 +75,7 @@ namespace Fluxions {
 		VkCommandPool commandPool_{ nullptr };
 		VkSemaphore semaphore_{ nullptr };
 
-		struct ImageBuffer {
+		struct SwapChainImageBuffer {
 			VkImage image_{ nullptr };
 			VkImageView view_{ nullptr };
 			VkFramebuffer framebuffer_{ nullptr };
@@ -92,9 +89,11 @@ namespace Fluxions {
 		VkPresentModeKHR presentMode_{ VK_PRESENT_MODE_MAILBOX_KHR };
 		uint32_t swapchainImageCount_{ 0 };
 		std::vector<VkImage> swapchainImages_;
-		std::vector<ImageBuffer> swapchainFramebuffers_;
+		std::vector<SwapChainImageBuffer> swapchainFramebuffers_;
 
 
+		static constexpr uint32_t MIN_FRAMES_IN_QUEUE = 2;
+		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
 		uint32_t frameImageIndex_{ 0 };
 
 		bool _createSDLWindow();
@@ -109,7 +108,7 @@ namespace Fluxions {
 		// returns true if device is created
 		bool _createDevice();
 		// returns true if Surface created
-		bool _createSurface();
+		bool _createSDLVulkanSurface();
 		// returns true if good image format found
 		bool _chooseSurfaceFormat();
 		// returns true if render pass created

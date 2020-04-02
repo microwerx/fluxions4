@@ -36,8 +36,8 @@ namespace Fluxions {
 
 		VkMemoryRequirements memoryRequirements;
 		vkGetBufferMemoryRequirements(context->device(), buffer_, &memoryRequirements);
-		int memoryTypeIndex = context->findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
-		if (memoryTypeIndex < 0) {
+		uint32_t memoryTypeIndex = context->findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
+		if (memoryTypeIndex == VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM) {
 			throw std::runtime_error("memory type bits failed");
 		}
 
@@ -49,7 +49,7 @@ namespace Fluxions {
 			VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 			nullptr,
 			allocationSize,
-			(uint32_t)memoryTypeIndex
+			memoryTypeIndex
 		};
 		switch (vkAllocateMemory(context->device(), &memoryAllocationInfo, nullptr, &memory_)) {
 		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");

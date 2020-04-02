@@ -44,6 +44,8 @@ namespace Fluxions {
 
 
 	void VulkanContext::kill() {
+		vkDeviceWaitIdle(device_);
+
 		for (auto& fb : swapchainFramebuffers_) {
 			vkFreeCommandBuffers(device_, commandPool_, 1, &fb.commandBuffer_);
 			vkDestroyFence(device_, fb.fence_, nullptr);
@@ -90,6 +92,9 @@ namespace Fluxions {
 
 
 	void VulkanContext::presentFrame() {
+		vkCmdEndRenderPass(commandBuffer());
+		vkEndCommandBuffer(commandBuffer());
+
 		VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		VkSubmitInfo submitInfo;
 		memset(&submitInfo, 0, sizeof(submitInfo));
@@ -120,14 +125,14 @@ namespace Fluxions {
 	}
 
 
-	int VulkanContext::findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const {
+	uint32_t VulkanContext::findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const {
 		for (unsigned i = 0; (1u << i) <= allowedMemoryTypeBits && i <= pdMemoryProperties_.memoryTypeCount; ++i) {
 			if ((allowedMemoryTypeBits & (1u << i)) &&
 				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
 				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
 				return (int)i;
 		}
-		return -1;
+		return VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM;
 	}
 
 
