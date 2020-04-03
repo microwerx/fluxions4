@@ -45,13 +45,16 @@ namespace Fluxions {
 		VkCommandBuffer& commandBuffer() { return swapchainFramebuffers_[frameImageIndex_].commandBuffer_; }
 		VkFramebuffer& framebuffer() { return swapchainFramebuffers_[frameImageIndex_].framebuffer_; }
 
+		uint32_t majorVersion() const { return VK_VERSION_MAJOR(version_); }
+		uint32_t minorVersion() const { return VK_VERSION_MINOR(version_); }
+		uint32_t patchVersion() const { return VK_VERSION_PATCH(version_); }
 	private:
 		std::string name_;
 		std::string title_;
 		uint32_t width_{ 1280 };
 		uint32_t height_{ 720 };
 		SDL_Window* window_{ nullptr };
-
+		uint32_t version_{ 0 };
 		VkClearValue clearValues[2] = { { 0.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 0.0f } };
 
 		std::vector<const char*> extensions_{
@@ -96,6 +99,8 @@ namespace Fluxions {
 		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
 		uint32_t frameImageIndex_{ 0 };
 
+		bool _handleError(VkResult result);
+
 		bool _createSDLWindow();
 		// report on SDL extensions if applicable
 		bool _getSDLExtensions();
@@ -121,8 +126,8 @@ namespace Fluxions {
 		bool _createSwapChain();
 		// create a framebuffer image for the swap chain
 		void _initImageBuffer(uint32_t i, VkImage image);
-	};
-} // namespace Fluxions
+		};
+	} // namespace Fluxions
 
 
 #endif

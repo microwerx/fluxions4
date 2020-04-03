@@ -12,8 +12,11 @@ namespace Fluxions {
 		bool init(VulkanContext* context, VkDeviceSize allocationSize, VkBufferUsageFlags usage);
 		void kill();
 
-		void copyToMap(size_t offset, void* src, size_t size);
+		VkBuffer& buffer() { return buffer_; }
+		size_t size() const { return allocationSize_; }
+		bool copyToMap(size_t offset, void* src, size_t size);
 	private:
+		size_t allocationSize_{ 0 };
 		VkBuffer buffer_{ nullptr };
 		VkDeviceMemory memory_{ nullptr };
 		uint8_t* map_{ nullptr };

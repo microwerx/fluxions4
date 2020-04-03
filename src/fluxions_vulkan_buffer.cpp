@@ -16,6 +16,8 @@ namespace Fluxions {
 		context_ = context;
 		if (!context_) throw std::runtime_error("VulkanBuffer::init() -> context is NULL");
 
+		allocationSize_ = allocationSize;
+
 		VkBufferCreateInfo bufferCreateInfo = {
 			//VkStructureType        sType;
 			//const void*            pNext;
@@ -82,7 +84,9 @@ namespace Fluxions {
 	}
 
 
-	void VulkanBuffer::copyToMap(size_t offset, void* src, size_t size) {
+	bool VulkanBuffer::copyToMap(size_t offset, void* src, size_t size) {
+		if (offset + size > allocationSize_) return false;
 		memcpy(map_ + offset, src, size);
+		return true;
 	}
 }

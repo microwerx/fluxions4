@@ -444,64 +444,10 @@ namespace Fluxions {
 		normals_offset_ = colors_offset_ + sizeof(vColors);
 		uint32_t allocationSize = normals_offset_ + sizeof(vNormals);
 
-		VkBufferCreateInfo bufferCreateInfo = {
-			//VkStructureType        sType;
-			//const void*            pNext;
-			//VkBufferCreateFlags    flags;
-			//VkDeviceSize           size;
-			//VkBufferUsageFlags     usage;
-			//VkSharingMode          sharingMode;
-			//uint32_t               queueFamilyIndexCount;
-			//const uint32_t*        pQueueFamilyIndices;
-			VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			nullptr, 0,
-			allocationSize,
-			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-			VK_SHARING_MODE_EXCLUSIVE,
-			0, nullptr
-		};
-		vkCreateBuffer(device(), &bufferCreateInfo, nullptr, &buffer_);
-
-		VkMemoryRequirements memoryRequirements;
-		vkGetBufferMemoryRequirements(device(), buffer_, &memoryRequirements);
-		uint32_t memoryTypeIndex = context_->findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
-		if (memoryTypeIndex == VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM) {
-			throw std::runtime_error("memory type bits failed");
-		}
-
-		VkMemoryAllocateInfo memoryAllocationInfo = {
-			//VkStructureType    sType;
-			//const void*        pNext;
-			//VkDeviceSize       allocationSize;
-			//uint32_t           memoryTypeIndex;
-			VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-			nullptr,
-			allocationSize,
-			memoryTypeIndex
-		};
-		switch (vkAllocateMemory(device(), &memoryAllocationInfo, nullptr, &deviceMemory_)) {
-		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
-		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
-		case VK_ERROR_TOO_MANY_OBJECTS:                   throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_TOO_MANY_OBJECTS");
-		case VK_ERROR_INVALID_EXTERNAL_HANDLE:            throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_EXTERNAL_HANDLE");
-		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
-		}
-
-		switch (vkMapMemory(device(), deviceMemory_, 0, allocationSize, 0, (void**)&map_)) {
-		case VK_ERROR_OUT_OF_HOST_MEMORY:   throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
-		case VK_ERROR_OUT_OF_DEVICE_MEMORY: throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
-		case VK_ERROR_MEMORY_MAP_FAILED:    throw std::runtime_error("vkMapMemory() -> VK_ERROR_MEMORY_MAP_FAILED");
-		}
-
-		switch (vkBindBufferMemory(device(), buffer_, deviceMemory_, 0)) {
-		case VK_ERROR_OUT_OF_HOST_MEMORY:                 throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
-		case VK_ERROR_OUT_OF_DEVICE_MEMORY:               throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
-		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkBindBufferMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
-		};
-
-		memcpy(map_ + vertex_offset_, vVertices, sizeof(vVertices));
-		memcpy(map_ + colors_offset_, vColors, sizeof(vColors));
-		memcpy(map_ + normals_offset_, vNormals, sizeof(vNormals));
+		vbuffer.init(context_, allocationSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		vbuffer.copyToMap(vertex_offset_, (void*)vVertices, sizeof(vVertices));
+		vbuffer.copyToMap(colors_offset_, (void*)vColors, sizeof(vColors));
+		vbuffer.copyToMap(normals_offset_, (void*)vNormals, sizeof(vNormals));
 
 		VkDescriptorPoolSize descriptorPoolSizes[] = {
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
@@ -538,7 +484,7 @@ namespace Fluxions {
 			//VkBuffer        buffer;
 			//VkDeviceSize    offset;
 			//VkDeviceSize    range;
-			buffer_, 0, sizeof(struct ubo)
+			vbuffer.buffer(), 0, sizeof(struct ubo)
 		};
 
 		VkWriteDescriptorSet writeDescriptorSet = {
@@ -565,17 +511,7 @@ namespace Fluxions {
 		};
 		vkUpdateDescriptorSets(device(), 1, &writeDescriptorSet, 0, nullptr);
 
-
-		struct ubo ubo;
-		size_t uboOffset = 0;
-		size_t uboSize = sizeof(struct ubo);
-		size_t vboOffset = uboOffset + uboSize;
-		size_t vboSize = sizeof(Vertex) * vertices.size();
-		if (vbuffer.init(context_, uboSize + vboSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)) {
-			vbuffer.copyToMap(uboOffset, &ubo, uboSize);
-			vbuffer.copyToMap(vboOffset, &vertices[0], vboSize);
-		}
-
+		resize(0, 0, context_->width(), context_->height(), 0.0f, 1.0f);
 		return true;
 	}
 
@@ -588,21 +524,8 @@ namespace Fluxions {
 
 
 	void VulkanConfig::use(float t) {
-		VkViewport viewport;
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float)context_->width();
-		viewport.height = (float)context_->height();
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer(), 0, 1, &viewport);
-
-		VkRect2D scissor;
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent.width = context_->width();
-		scissor.extent.height = context_->height();
-		vkCmdSetScissor(commandBuffer(), 0, 1, &scissor);
+		vkCmdSetViewport(commandBuffer(), 0, 1, &viewport_);
+		vkCmdSetScissor(commandBuffer(), 0, 1, &scissor_);
 
 		struct ubo ubo;
 		ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
@@ -615,9 +538,10 @@ namespace Fluxions {
 		ubo.modelviewprojection = projection * ubo.modelview;
 		ubo.color.g = 0.5f * sin(t) + 0.5f;
 		memcpy(ubo.normal, &ubo.modelview, sizeof(ubo.normal));
-		memcpy(map_, &ubo, sizeof(ubo));
+		vbuffer.copyToMap(0, (void*)&ubo, sizeof(ubo));
+		//memcpy(map_, &ubo, sizeof(ubo));
 
-		VkBuffer buffers[] = { buffer_, buffer_, buffer_ };
+		VkBuffer buffers[] = { vbuffer.buffer(), vbuffer.buffer(), vbuffer.buffer() };
 		VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
 		vkCmdBindVertexBuffers(commandBuffer(), 0, 3, buffers, offsets);
 		vkCmdBindPipeline(commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
