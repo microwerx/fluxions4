@@ -2,6 +2,7 @@
 #define FLUXIONS_GTE_BASE_HPP
 
 #include <cmath>
+#include <algorithm>
 
 struct FxColor4f {
 	float r = 0.0f;
@@ -10,6 +11,14 @@ struct FxColor4f {
 	float a = 0.0f;
 	FxColor4f(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f) :r(r), g(g), b(b), a(a) {}
 };
+
+inline FxColor4f saturate(FxColor4f color) {
+	return {
+		std::clamp(color.r, 0.0f, 1.0f),
+		std::clamp(color.g, 0.0f, 1.0f),
+		std::clamp(color.b, 0.0f, 1.0f),
+		std::clamp(color.a, 0.0f, 1.0f) };
+}
 
 struct FxVector3f {
 	float x = 0.0f;
