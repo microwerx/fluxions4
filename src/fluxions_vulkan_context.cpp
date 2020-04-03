@@ -211,7 +211,7 @@ namespace Fluxions {
 			HFLOGINFO("vendor id:    %04x", pdProperties_.vendorID);
 			HFLOGINFO("vendor name:  %s", pdProperties_.deviceName);
 			HFLOGINFO("memory heaps: %d", pdMemoryProperties_.memoryHeapCount);
-			for (int j = 0; j < pdMemoryProperties_.memoryHeapCount; j++) {
+			for (uint32_t j = 0; j < pdMemoryProperties_.memoryHeapCount; j++) {
 				auto f = pdMemoryProperties_.memoryHeaps[j].flags;
 				if (!f) continue;
 				HFLOGINFO("memory heap size:       %zu", pdMemoryProperties_.memoryHeaps[j].size);
@@ -219,7 +219,7 @@ namespace Fluxions {
 				if (f & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT) HFLOGINFO("memory heap properties: Multiple instance");
 			}
 			HFLOGINFO("memory types: %d", pdMemoryProperties_.memoryTypeCount);
-			for (int j = 0; j < pdMemoryProperties_.memoryTypeCount; j++) {
+			for (uint32_t j = 0; j < pdMemoryProperties_.memoryTypeCount; j++) {
 				auto f = pdMemoryProperties_.memoryTypes[j].propertyFlags;
 				if (!f) continue;
 				HFLOGINFO("memory type index:      %d", pdMemoryProperties_.memoryTypes[j].heapIndex);
@@ -355,6 +355,7 @@ namespace Fluxions {
 		subpassDescription.pPreserveAttachments = NULL;
 
 		VkRenderPassCreateInfo renderPassCreateInfo;
+
 		memset(&renderPassCreateInfo, 0, sizeof(VkRenderPassCreateInfo));
 		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderPassCreateInfo.attachmentCount = 1;

@@ -97,9 +97,6 @@
     <ClInclude Include="include\fluxions_vulkan_config.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_gte_matrix4.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\fluxions_vulkan_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
