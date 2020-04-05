@@ -23,6 +23,7 @@
     <ProjectGuid>{AA5CEED7-E599-4D03-A233-77A8CB7B0997}</ProjectGuid>
     <RootNamespace>fluxions4test</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>fluxions4</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
