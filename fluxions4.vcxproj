@@ -185,6 +185,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\fluxions_ecs.hpp" />
     <ClInclude Include="include\fluxions_gte_base.hpp" />
     <ClInclude Include="include\fluxions_ibase_object.hpp" />
     <ClInclude Include="include\fluxions_vulkan_buffer.hpp" />
