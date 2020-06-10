@@ -1,7 +1,7 @@
 #ifndef FLUXIONS_VULKAN_CONFIG_HPP
 #define FLUXIONS_VULKAN_CONFIG_HPP
 
-#include "fluxions_vulkan_context.hpp"
+#include "fluxions4_vulkan_context.hpp"
 #include <fluxions4_vulkan_buffer.hpp>
 
 namespace Fluxions {

@@ -108,6 +108,8 @@ namespace Fluxions {
 		bool _createInstance();
 		// returns number of devices
 		bool _enumerateDevices();
+		// attempt to use validation layer
+		bool _useValidationLayer();
 		// returns number of devices with a graphics queue
 		bool _checkQueueFamilyProperties();
 		// returns true if device is created

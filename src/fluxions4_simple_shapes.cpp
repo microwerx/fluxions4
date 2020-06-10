@@ -42,6 +42,15 @@ namespace Fluxions {
 			{ { +1.0f, -1.0f, +1.0f }, { +0.0f, -1.0f, +0.0f }, { 1.0f,  0.0f,  1.0f }, { 0.0f,1.0f,0.0f } },  // point magenta
 		};
 
+		std::vector<VulkanSurface> cubeSurfaces{
+			{ 4, 1,  0, 0 },	// front
+			{ 4, 1,  4, 0 },	// back
+			{ 4, 1,  8, 0 },	// left
+			{ 4, 1, 12, 0 },	// right
+			{ 4, 1, 16, 0 },	// top
+			{ 4, 1, 20, 0 },	// bottom
+		};
+
 		const float vVertices[] = {
 			// front
 			-1.0f, -1.0f, +1.0f, // point blue
@@ -147,6 +156,10 @@ namespace Fluxions {
 
 		mesh.resize(24);
 		mesh.update(&cubeVertices[0], 0, cubeVertices.size());
+
+		for (auto& s : cubeSurfaces) {
+			mesh.drawSurface(s);
+		}
 
 		return mesh;
 	}

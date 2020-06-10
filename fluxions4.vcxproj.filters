@@ -57,6 +57,9 @@
     <ClCompile Include="src\fluxions4_vulkan_mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_vertex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vkcube.frag">
@@ -128,6 +131,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\fluxions4_vulkan_ubo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_vertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

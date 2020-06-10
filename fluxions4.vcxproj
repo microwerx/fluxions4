@@ -154,6 +154,7 @@
     <ClCompile Include="src\fluxions4_vulkan_config.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_context.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_mesh.cpp" />
+    <ClCompile Include="src\fluxions4_vulkan_vertex.cpp" />
     <ClCompile Include="src\hatchetfish_log.cpp" />
     <ClCompile Include="src\hatchetfish_stopwatch.cpp" />
     <ClCompile Include="vkcube\cube.c">
@@ -199,6 +200,7 @@
     <ClInclude Include="include\fluxions4_vulkan_context.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_mesh.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_ubo.hpp" />
+    <ClInclude Include="include\fluxions4_vulkan_vertex.hpp" />
     <ClInclude Include="include\hatchetfish.hpp" />
     <ClInclude Include="include\hatchetfish_log.hpp" />
     <ClInclude Include="include\hatchetfish_stopwatch.hpp" />

@@ -257,6 +257,11 @@ namespace Fluxions {
 	}
 
 
+	bool VulkanContext::_useValidationLayer() {
+		return true;
+	}
+
+
 	bool VulkanContext::_checkQueueFamilyProperties() {
 		uint32_t count;
 		vkGetPhysicalDeviceQueueFamilyProperties(pd_, &count, NULL);

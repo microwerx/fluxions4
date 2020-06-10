@@ -1,4 +1,6 @@
 #include <fluxions4_vulkan_config.hpp>
+#include <fluxions4_vulkan_ubo.hpp>
+#include <fluxions4_vulkan_vertex.hpp>
 
 namespace Fluxions {
 	// Temporary structs we will replace with our own later...
@@ -52,25 +54,6 @@ namespace Fluxions {
 		};
 		vkCreatePipelineLayout(device(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout_);
 
-		VkVertexInputBindingDescription vertexInputBindingDescriptions[3] = {
-			//uint32_t             binding;
-			//uint32_t             stride;
-			//VkVertexInputRate    inputRate;
-			{ 0, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
-			{ 1, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
-			{ 2, 3 * sizeof(float), VK_VERTEX_INPUT_RATE_VERTEX },
-		};
-
-		VkVertexInputAttributeDescription vertexInputAttributeDescriptions[3] = {
-			//uint32_t    location;
-			//uint32_t    binding;
-			//VkFormat    format;
-			//uint32_t    offset;
-			{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 },
-			{ 1, 1, VK_FORMAT_R32G32B32_SFLOAT, 0 },
-			{ 2, 2, VK_FORMAT_R32G32B32_SFLOAT, 0 },
-		};
-
 		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = {
 			//VkStructureType                             sType;
 			//const void*                                 pNext;
@@ -81,8 +64,8 @@ namespace Fluxions {
 			//const VkVertexInputAttributeDescription*    pVertexAttributeDescriptions;
 			VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 			nullptr, 0,
-			3, vertexInputBindingDescriptions,
-			3, vertexInputAttributeDescriptions
+			1, VulkanVertex::GetBindingDescriptions().data(),
+			4, VulkanVertex::GetAttributeDescriptions().data()
 		};
 
 		VkShaderModuleCreateInfo vsShaderModuleCreateInfo = {
@@ -321,15 +304,8 @@ namespace Fluxions {
 		};
 		vkCreateGraphicsPipelines(device(), pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline_);
 
-		vertex_offset_ = sizeof(struct VertShaderUbo);
-		colors_offset_ = vertex_offset_ + sizeof(vVertices);
-		normals_offset_ = colors_offset_ + sizeof(vColors);
-		uint32_t allocationSize = normals_offset_ + sizeof(vNormals);
-
-		vbuffer.init(context_, allocationSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-		vbuffer.copyToMap(vertex_offset_, (void*)vVertices, sizeof(vVertices));
-		vbuffer.copyToMap(colors_offset_, (void*)vColors, sizeof(vColors));
-		vbuffer.copyToMap(normals_offset_, (void*)vNormals, sizeof(vNormals));
+		uint32_t allocationSize = sizeof(struct StandardUbo);
+		ubo_buffer_.init(context_, allocationSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 
 		VkDescriptorPoolSize descriptorPoolSizes[] = {
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
@@ -366,7 +342,7 @@ namespace Fluxions {
 			//VkBuffer        buffer;
 			//VkDeviceSize    offset;
 			//VkDeviceSize    range;
-			vbuffer.buffer(), 0, sizeof(struct ubo)
+			ubo_buffer_.buffer(), 0, sizeof(struct StandardUbo)
 		};
 
 		VkWriteDescriptorSet writeDescriptorSet = {
@@ -409,23 +385,22 @@ namespace Fluxions {
 		vkCmdSetViewport(commandBuffer(), 0, 1, &viewport_);
 		vkCmdSetScissor(commandBuffer(), 0, 1, &scissor_);
 
-		struct VertShaderUbo vs_ubo;
-		vs_ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
-		vs_ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		vs_ubo.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
-		vs_ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		struct StandardUbo ubo;
+		ubo.vert.modelview.translate({ 0.0f, 0.0f, -8.0f });
+		ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
+		ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
 		float aspect = (float)context_->width() / (float)context_->height();
 		FxMatrix4f projection;
 		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
-		vs_ubo.modelviewprojection = projection * vs_ubo.modelview;
-		vs_ubo.color.g = 0.5f * sin(t) + 0.5f;
-		memcpy(vs_ubo.normal, &vs_ubo.modelview, sizeof(vs_ubo.normal));
+		ubo.vert.modelviewprojection = projection * ubo.vert.modelview;
+		ubo.vert.color.g = 0.5f * sin(t) + 0.5f;
+		memcpy(ubo.vert.normal, &ubo.vert.modelview, sizeof(ubo.vert.normal));
 		ubo_buffer_.copyToMap(0, (void*)&ubo, sizeof(ubo));
-		//memcpy(map_, &ubo, sizeof(ubo));
 
-		VkBuffer buffers[] = { vbuffer.buffer(), vbuffer.buffer(), vbuffer.buffer() };
-		VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
-		vkCmdBindVertexBuffers(commandBuffer(), 0, 3, buffers, offsets);
+		//VkBuffer buffers[] = { vbuffer.buffer(), vbuffer.buffer(), vbuffer.buffer() };
+		//VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
+		//vkCmdBindVertexBuffers(commandBuffer(), 0, 3, buffers, offsets);
 		vkCmdBindPipeline(commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 		vkCmdBindDescriptorSets(commandBuffer(),
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -433,12 +408,12 @@ namespace Fluxions {
 								0, 1,
 								&descriptorSet_, 0, nullptr);
 
-		vkCmdDraw(commandBuffer(), 4, 1, 0, 0);
-		vkCmdDraw(commandBuffer(), 4, 1, 4, 0);
-		vkCmdDraw(commandBuffer(), 4, 1, 8, 0);
-		vkCmdDraw(commandBuffer(), 4, 1, 12, 0);
-		vkCmdDraw(commandBuffer(), 4, 1, 16, 0);
-		vkCmdDraw(commandBuffer(), 4, 1, 20, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 0, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 4, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 8, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 12, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 16, 0);
+		//vkCmdDraw(commandBuffer(), 4, 1, 20, 0);
 	}
 
 

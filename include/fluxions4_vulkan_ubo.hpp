@@ -1,6 +1,8 @@
 #ifndef FLUXIONS4_VULKAN_UBO_HPP
 #define FLUXIONS4_VULKAN_UBO_HPP
 
+#include <fluxions4_gte_base.hpp>
+
 namespace Fluxions {
 	struct VertShaderUbo {
 		FxMatrix4f modelview;
@@ -16,8 +18,8 @@ namespace Fluxions {
 	};
 
 	struct StandardUbo {
-		VertShaderUbo vs_ubo;
-		FragShaderUbo fs_ubo;
+		VertShaderUbo vert;
+		FragShaderUbo frag;
 	};
 }
 
