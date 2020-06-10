@@ -88,11 +88,6 @@ namespace Fluxions {
 		}
 		swapchainFramebuffers_.clear();
 		
-		for (auto& image : swapchainImages_) {
-			vkDestroyImage(device_, image, nullptr);
-		}
-		swapchainImages_.clear();
-
 		vkDestroySemaphore(device_, semaphore_, nullptr);
 		vkDestroyCommandPool(device_, commandPool_, nullptr);
 		vkDestroyRenderPass(device_, renderPass_, nullptr);

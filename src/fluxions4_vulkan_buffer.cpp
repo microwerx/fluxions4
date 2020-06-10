@@ -43,6 +43,8 @@ namespace Fluxions {
 			throw std::runtime_error("memory type bits failed");
 		}
 
+		allocationSize_ = memoryRequirements.size;
+
 		VkMemoryAllocateInfo memoryAllocationInfo = {
 			//VkStructureType    sType;
 			//const void*        pNext;
@@ -50,7 +52,7 @@ namespace Fluxions {
 			//uint32_t           memoryTypeIndex;
 			VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 			nullptr,
-			allocationSize,
+			allocationSize_,
 			memoryTypeIndex
 		};
 		switch (vkAllocateMemory(context->device(), &memoryAllocationInfo, nullptr, &memory_)) {
@@ -61,7 +63,7 @@ namespace Fluxions {
 		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR: throw std::runtime_error("vkAllocateMemory() -> VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS_KHR");
 		}
 
-		switch (vkMapMemory(context->device(), memory_, 0, allocationSize, 0, (void**)&map_)) {
+		switch (vkMapMemory(context->device(), memory_, 0, allocationSize_, 0, (void**)&map_)) {
 		case VK_ERROR_OUT_OF_HOST_MEMORY:   throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_HOST_MEMORY");
 		case VK_ERROR_OUT_OF_DEVICE_MEMORY: throw std::runtime_error("vkMapMemory() -> VK_ERROR_OUT_OF_DEVICE_MEMORY");
 		case VK_ERROR_MEMORY_MAP_FAILED:    throw std::runtime_error("vkMapMemory() -> VK_ERROR_MEMORY_MAP_FAILED");
