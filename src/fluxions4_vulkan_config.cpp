@@ -2,12 +2,6 @@
 
 namespace Fluxions {
 	// Temporary structs we will replace with our own later...
-	struct ubo {
-		FxMatrix4f modelview;
-		FxMatrix4f modelviewprojection;
-		float normal[12];
-		FxColor4f color{ 0.1f, 0.2f, 0.3f, 1.0f };
-	};
 
 	static uint32_t vs_spirv_source[] = {
 		#include "vkcube.vert.spv.h.in"
@@ -15,111 +9,6 @@ namespace Fluxions {
 
 	static uint32_t fs_spirv_source[] = {
 		#include "vkcube.frag.spv.h.in"
-	};
-
-	std::vector<Vertex> vertices{
-		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } },
-		{ { +1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ { +0.0f, +1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f }, { 0.5f, 1.0f, 0.0f } },
-	};
-
-	static const float vVertices[] = {
-		// front
-		-1.0f, -1.0f, +1.0f, // point blue
-		+1.0f, -1.0f, +1.0f, // point magenta
-		-1.0f, +1.0f, +1.0f, // point cyan
-		+1.0f, +1.0f, +1.0f, // point white
-		// back
-		+1.0f, -1.0f, -1.0f, // point red
-		-1.0f, -1.0f, -1.0f, // point black
-		+1.0f, +1.0f, -1.0f, // point yellow
-		-1.0f, +1.0f, -1.0f, // point green
-		// right
-		+1.0f, -1.0f, +1.0f, // point magenta
-		+1.0f, -1.0f, -1.0f, // point red
-		+1.0f, +1.0f, +1.0f, // point white
-		+1.0f, +1.0f, -1.0f, // point yellow
-		// left
-		-1.0f, -1.0f, -1.0f, // point black
-		-1.0f, -1.0f, +1.0f, // point blue
-		-1.0f, +1.0f, -1.0f, // point green
-		-1.0f, +1.0f, +1.0f, // point cyan
-		// top
-		-1.0f, +1.0f, +1.0f, // point cyan
-		+1.0f, +1.0f, +1.0f, // point white
-		-1.0f, +1.0f, -1.0f, // point green
-		+1.0f, +1.0f, -1.0f, // point yellow
-		// bottom
-		-1.0f, -1.0f, -1.0f, // point black
-		+1.0f, -1.0f, -1.0f, // point red
-		-1.0f, -1.0f, +1.0f, // point blue
-		+1.0f, -1.0f, +1.0f  // point magenta
-	};
-
-	static const float vColors[] = {
-		// front
-		0.0f,  0.0f,  1.0f, // blue
-		1.0f,  0.0f,  1.0f, // magenta
-		0.0f,  1.0f,  1.0f, // cyan
-		1.0f,  1.0f,  1.0f, // white
-		// back
-		1.0f,  0.0f,  0.0f, // red
-		0.0f,  0.0f,  0.0f, // black
-		1.0f,  1.0f,  0.0f, // yellow
-		0.0f,  1.0f,  0.0f, // green
-		// right
-		1.0f,  0.0f,  1.0f, // magenta
-		1.0f,  0.0f,  0.0f, // red
-		1.0f,  1.0f,  1.0f, // white
-		1.0f,  1.0f,  0.0f, // yellow
-		// left
-		0.0f,  0.0f,  0.0f, // black
-		0.0f,  0.0f,  1.0f, // blue
-		0.0f,  1.0f,  0.0f, // green
-		0.0f,  1.0f,  1.0f, // cyan
-		// top
-		0.0f,  1.0f,  1.0f, // cyan
-		1.0f,  1.0f,  1.0f, // white
-		0.0f,  1.0f,  0.0f, // green
-		1.0f,  1.0f,  0.0f, // yellow
-		// bottom
-		0.0f,  0.0f,  0.0f, // black
-		1.0f,  0.0f,  0.0f, // red
-		0.0f,  0.0f,  1.0f, // blue
-		1.0f,  0.0f,  1.0f  // magenta
-	};
-
-	static const float vNormals[] = {
-		// front
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		+0.0f, +0.0f, +1.0f, // forward
-		// back
-		+0.0f, +0.0f, -1.0f, // backbard
-		+0.0f, +0.0f, -1.0f, // backbard
-		+0.0f, +0.0f, -1.0f, // backbard
-		+0.0f, +0.0f, -1.0f, // backbard
-		// right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		+1.0f, +0.0f, +0.0f, // right
-		// left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		-1.0f, +0.0f, +0.0f, // left
-		// top
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		+0.0f, +1.0f, +0.0f, // up
-		// bottom
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f, // down
-		+0.0f, -1.0f, +0.0f  // down
 	};
 
 
@@ -432,7 +321,7 @@ namespace Fluxions {
 		};
 		vkCreateGraphicsPipelines(device(), pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &pipeline_);
 
-		vertex_offset_ = sizeof(struct ubo);
+		vertex_offset_ = sizeof(struct VertShaderUbo);
 		colors_offset_ = vertex_offset_ + sizeof(vVertices);
 		normals_offset_ = colors_offset_ + sizeof(vColors);
 		uint32_t allocationSize = normals_offset_ + sizeof(vNormals);
@@ -510,7 +399,7 @@ namespace Fluxions {
 
 
 	void VulkanConfig::kill() {
-		vbuffer.kill();
+		ubo_buffer_.kill();
 		vkDestroyPipeline(device(), pipeline_, nullptr);
 		vkDestroyPipelineLayout(device(), pipelineLayout_, nullptr);
 	}
@@ -520,18 +409,18 @@ namespace Fluxions {
 		vkCmdSetViewport(commandBuffer(), 0, 1, &viewport_);
 		vkCmdSetScissor(commandBuffer(), 0, 1, &scissor_);
 
-		struct ubo ubo;
-		ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
-		ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		ubo.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
-		ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		struct VertShaderUbo vs_ubo;
+		vs_ubo.modelview.translate({ 0.0f, 0.0f, -8.0f });
+		vs_ubo.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		vs_ubo.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
+		vs_ubo.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
 		float aspect = (float)context_->width() / (float)context_->height();
 		FxMatrix4f projection;
 		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
-		ubo.modelviewprojection = projection * ubo.modelview;
-		ubo.color.g = 0.5f * sin(t) + 0.5f;
-		memcpy(ubo.normal, &ubo.modelview, sizeof(ubo.normal));
-		vbuffer.copyToMap(0, (void*)&ubo, sizeof(ubo));
+		vs_ubo.modelviewprojection = projection * vs_ubo.modelview;
+		vs_ubo.color.g = 0.5f * sin(t) + 0.5f;
+		memcpy(vs_ubo.normal, &vs_ubo.modelview, sizeof(vs_ubo.normal));
+		ubo_buffer_.copyToMap(0, (void*)&ubo, sizeof(ubo));
 		//memcpy(map_, &ubo, sizeof(ubo));
 
 		VkBuffer buffers[] = { vbuffer.buffer(), vbuffer.buffer(), vbuffer.buffer() };

@@ -3,13 +3,46 @@
 
 namespace Fluxions {
 	namespace {
-		std::vector<Vertex> vertices{
+		std::vector<VulkanVertex> vertices{
 			{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f } },
 			{ { +1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f } },
 			{ { +0.0f, +1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f }, { 0.5f, 1.0f, 0.0f } },
 		};
 
-		static const float vVertices[] = {
+		std::vector<VulkanVertex> cubeVertices{
+			// front
+			{ { -1.0f, -1.0f, +1.0f }, { +0.0f, +0.0f, +1.0f }, { 0.0f,  0.0f,  1.0f }, { 0.0f,0.0f,0.0f } },  // point blue
+			{ { +1.0f, -1.0f, +1.0f }, { +0.0f, +0.0f, +1.0f }, { 1.0f,  0.0f,  1.0f }, { 1.0f,0.0f,0.0f } },  // point magenta
+			{ { -1.0f, +1.0f, +1.0f }, { +0.0f, +0.0f, +1.0f }, { 0.0f,  1.0f,  1.0f }, { 1.0f,1.0f,0.0f } },  // point cyan
+			{ { +1.0f, +1.0f, +1.0f }, { +0.0f, +0.0f, +1.0f }, { 1.0f,  1.0f,  1.0f }, { 0.0f,1.0f,0.0f } },  // point white
+			//  back
+			{ { +1.0f, -1.0f, -1.0f }, { +0.0f, +0.0f, -1.0f }, { 1.0f,  0.0f,  0.0f }, { 0.0f,0.0f,0.0f } },  // point red
+			{ { -1.0f, -1.0f, -1.0f }, { +0.0f, +0.0f, -1.0f }, { 0.0f,  0.0f,  0.0f }, { 1.0f,0.0f,0.0f } },  // point black
+			{ { +1.0f, +1.0f, -1.0f }, { +0.0f, +0.0f, -1.0f }, { 1.0f,  1.0f,  0.0f }, { 1.0f,1.0f,0.0f } },  // point yellow
+			{ { -1.0f, +1.0f, -1.0f }, { +0.0f, +0.0f, -1.0f }, { 0.0f,  1.0f,  0.0f }, { 0.0f,1.0f,0.0f } },  // point green
+			//  right
+			{ { +1.0f, -1.0f, +1.0f }, { +1.0f, +0.0f, +0.0f }, { 1.0f,  0.0f,  1.0f }, { 0.0f,0.0f,0.0f } },  // point magenta
+			{ { +1.0f, -1.0f, -1.0f }, { +1.0f, +0.0f, +0.0f }, { 1.0f,  0.0f,  0.0f }, { 1.0f,0.0f,0.0f } },  // point red
+			{ { +1.0f, +1.0f, +1.0f }, { +1.0f, +0.0f, +0.0f }, { 1.0f,  1.0f,  1.0f }, { 1.0f,1.0f,0.0f } },  // point white
+			{ { +1.0f, +1.0f, -1.0f }, { +1.0f, +0.0f, +0.0f }, { 1.0f,  1.0f,  0.0f }, { 0.0f,1.0f,0.0f } },  // point yellow
+			//  left
+			{ { -1.0f, -1.0f, -1.0f }, { -1.0f, +0.0f, +0.0f }, { 0.0f,  0.0f,  0.0f }, { 0.0f,0.0f,0.0f } },  // point black
+			{ { -1.0f, -1.0f, +1.0f }, { -1.0f, +0.0f, +0.0f }, { 0.0f,  0.0f,  1.0f }, { 1.0f,0.0f,0.0f } },  // point blue
+			{ { -1.0f, +1.0f, -1.0f }, { -1.0f, +0.0f, +0.0f }, { 0.0f,  1.0f,  0.0f }, { 1.0f,1.0f,0.0f } },  // point green
+			{ { -1.0f, +1.0f, +1.0f }, { -1.0f, +0.0f, +0.0f }, { 0.0f,  1.0f,  1.0f }, { 0.0f,1.0f,0.0f } },  // point cyan
+			//  top
+			{ { -1.0f, +1.0f, +1.0f }, { +0.0f, +1.0f, +0.0f }, { 0.0f,  1.0f,  1.0f }, { 0.0f,0.0f,0.0f } },  // point cyan
+			{ { +1.0f, +1.0f, +1.0f }, { +0.0f, +1.0f, +0.0f }, { 1.0f,  1.0f,  1.0f }, { 1.0f,0.0f,0.0f } },  // point white
+			{ { -1.0f, +1.0f, -1.0f }, { +0.0f, +1.0f, +0.0f }, { 0.0f,  1.0f,  0.0f }, { 1.0f,1.0f,0.0f } },  // point green
+			{ { +1.0f, +1.0f, -1.0f }, { +0.0f, +1.0f, +0.0f }, { 1.0f,  1.0f,  0.0f }, { 0.0f,1.0f,0.0f } },  // point yellow
+			//  bottom
+			{ { -1.0f, -1.0f, -1.0f }, { +0.0f, -1.0f, +0.0f }, { 0.0f,  0.0f,  0.0f }, { 0.0f,0.0f,0.0f } },  // point black
+			{ { +1.0f, -1.0f, -1.0f }, { +0.0f, -1.0f, +0.0f }, { 1.0f,  0.0f,  0.0f }, { 1.0f,0.0f,0.0f } },  // point red
+			{ { -1.0f, -1.0f, +1.0f }, { +0.0f, -1.0f, +0.0f }, { 0.0f,  0.0f,  1.0f }, { 1.0f,1.0f,0.0f } },  // point blue
+			{ { +1.0f, -1.0f, +1.0f }, { +0.0f, -1.0f, +0.0f }, { 1.0f,  0.0f,  1.0f }, { 0.0f,1.0f,0.0f } },  // point magenta
+		};
+
+		const float vVertices[] = {
 			// front
 			-1.0f, -1.0f, +1.0f, // point blue
 			+1.0f, -1.0f, +1.0f, // point magenta
@@ -42,7 +75,7 @@ namespace Fluxions {
 			+1.0f, -1.0f, +1.0f  // point magenta
 		};
 
-		static const float vColors[] = {
+		const float vColors[] = {
 			// front
 			0.0f,  0.0f,  1.0f, // blue
 			1.0f,  0.0f,  1.0f, // magenta
@@ -75,7 +108,7 @@ namespace Fluxions {
 			1.0f,  0.0f,  1.0f  // magenta
 		};
 
-		static const float vNormals[] = {
+		const float vNormals[] = {
 			// front
 			+0.0f, +0.0f, +1.0f, // forward
 			+0.0f, +0.0f, +1.0f, // forward
@@ -110,6 +143,11 @@ namespace Fluxions {
 	}
 
 	VulkanMesh CreateCube() {
+		VulkanMesh mesh;
 
+		mesh.resize(24);
+		mesh.update(&cubeVertices[0], 0, cubeVertices.size());
+
+		return mesh;
 	}
 }

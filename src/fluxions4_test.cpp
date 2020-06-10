@@ -3,9 +3,10 @@
 #include <iostream>
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <hatchetfish.hpp>
 #include <fluxions4_vulkan_context.hpp>
 #include <fluxions4_vulkan_config.hpp>
-#include <hatchetfish.hpp>
+#include <fluxions4_simple_shapes.hpp>
 
 #pragma comment(lib, "vulkan-1.lib")
 
@@ -25,6 +26,9 @@ public:
 		vcontext.setWindowTitle("Hello, World");
 		if (!vcontext.init()) return false;
 		if (!vconfig.init()) return false;
+
+		cube = Fluxions::CreateCube();
+
 		return true;
 	}
 
