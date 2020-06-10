@@ -36,8 +36,8 @@ namespace Fluxions {
 		VkDevice device() { return context_->device(); }
 
 		FxColor4f clearColor_;
-		VkViewport viewport_;
-		VkRect2D scissor_;
+		VkViewport viewport_{ 0,0,0,0,0,0 };
+		VkRect2D scissor_{ 0,0,0,0 };
 
 		VkPipelineLayout pipelineLayout_{ nullptr };
 		VkPipeline pipeline_{ nullptr };
@@ -51,7 +51,7 @@ namespace Fluxions {
 		//VkDeviceMemory deviceMemory_{ nullptr };
 		//uint8_t* map_{ nullptr };
 
-		VulkanBuffer vbuffer;
+		VulkanBuffer ubo_buffer_;
 	};
 }
 
