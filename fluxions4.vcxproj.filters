@@ -18,9 +18,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\fluxions_test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\hatchetfish_log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,16 +33,28 @@
     <ClCompile Include="vkcube\xdg-shell-protocol.c">
       <Filter>vkCube</Filter>
     </ClCompile>
-    <ClCompile Include="src\fluxions_vulkan_context.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\fluxions_vulkan_config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vkcube\cube.c">
       <Filter>vkCube</Filter>
     </ClCompile>
-    <ClCompile Include="src\fluxions_vulkan_buffer.cpp">
+    <ClCompile Include="src\fluxions4_simple_shapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_superquadrics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -79,9 +88,6 @@
     <ClInclude Include="include\hatchetfish_stopwatch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_gte_base.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vkcube\common.h">
       <Filter>vkCube</Filter>
     </ClInclude>
@@ -91,19 +97,37 @@
     <ClInclude Include="vkcube\xdg-shell-protocol.h">
       <Filter>vkCube</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_vulkan_context.hpp">
+    <ClInclude Include="include\fluxions4_stdcxx.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_vulkan_config.hpp">
+    <ClInclude Include="include\fluxions4_simple_shapes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_vulkan_buffer.hpp">
+    <ClInclude Include="include\fluxions4_superquadrics.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_ibase_object.hpp">
+    <ClInclude Include="include\fluxions4_vulkan_buffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions_ecs.hpp">
+    <ClInclude Include="include\fluxions4_vulkan_config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_context.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_mesh.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_ibase_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_gte_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_ecs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_ubo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
