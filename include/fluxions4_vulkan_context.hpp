@@ -60,6 +60,7 @@ namespace Fluxions {
 		std::vector<const char*> extensions_{
 			VK_EXT_DEBUG_REPORT_EXTENSION_NAME, // This extension allows us to receive debug messages
 			VK_KHR_SURFACE_EXTENSION_NAME,		// This extension allows us to use KHR Surfaces
+			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
 			VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #endif
@@ -94,6 +95,17 @@ namespace Fluxions {
 		std::vector<VkImage> swapchainImages_;
 		std::vector<SwapChainImageBuffer> swapchainFramebuffers_;
 
+		// Validation Layer Support
+#ifdef NDEBUG
+		static constexpr bool useValidationLayers = false;
+		static constexpr bool useDebugCallback = false;
+#else
+		static constexpr bool useValidationLayers = true;
+		static constexpr bool useDebugCallback = true;
+#endif
+		std::vector<VkLayerProperties> availableLayerProperties;
+		VkLayerProperties* validationLayerProperties{ nullptr };
+		VkDebugUtilsMessengerEXT debugUtilsMessenger{ nullptr };
 
 		static constexpr uint32_t MIN_FRAMES_IN_QUEUE = 2;
 		static constexpr uint32_t MAX_FRAMES_IN_QUEUE = 4;
@@ -104,12 +116,12 @@ namespace Fluxions {
 		bool _createSDLWindow();
 		// report on SDL extensions if applicable
 		bool _getSDLExtensions();
+		// signal to use validation layer
+		bool _useValidationLayer();
 		// returns true if Vulkan instance created
 		bool _createInstance();
 		// returns number of devices
 		bool _enumerateDevices();
-		// attempt to use validation layer
-		bool _useValidationLayer();
 		// returns number of devices with a graphics queue
 		bool _checkQueueFamilyProperties();
 		// returns true if device is created
@@ -128,8 +140,8 @@ namespace Fluxions {
 		bool _createSwapChain();
 		// create a framebuffer image for the swap chain
 		void _initImageBuffer(uint32_t i, VkImage image);
-		};
-	} // namespace Fluxions
+	};
+} // namespace Fluxions
 
 
 #endif

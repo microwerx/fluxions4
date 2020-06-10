@@ -10,6 +10,39 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace Fluxions {
+	namespace {
+		std::vector<const char*> ValidationLayerNames = {
+			"VK_LAYER_KHRONOS_validation"
+		};
+
+		VKAPI_ATTR VkBool32 VKAPI_CALL ValidationLayerCallback(
+			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+			VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+			void* pUserData) {
+
+			if (messageType != VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) {
+				return VK_FALSE;
+			}
+
+			switch (messageSeverity) {
+			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+				HFLOGINFO("%s", pCallbackData->pMessage);
+				break;
+			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+				HFLOGDEBUG("%s", pCallbackData->pMessage);
+				break;
+			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+				HFLOGWARN("%s", pCallbackData->pMessage);
+				break;
+			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+				HFLOGERROR("%s", pCallbackData->pMessage);
+				break;
+			}
+
+			return VK_FALSE;
+		}
+	}
 
 	VulkanContext::VulkanContext() {
 		memset(&pdMemoryProperties_, 0, sizeof(VkPhysicalDeviceMemoryProperties));
@@ -26,6 +59,7 @@ namespace Fluxions {
 			if (!_getSDLExtensions()) return false;
 			if (!_createInstance()) return false;
 			if (!_enumerateDevices()) return false;
+			if (!_useValidationLayer()) return false;
 			if (!_checkQueueFamilyProperties()) return false;
 			if (!_createDevice()) return false;
 			if (!_createSDLVulkanSurface()) return false;
@@ -57,6 +91,14 @@ namespace Fluxions {
 		vkDestroyCommandPool(device_, commandPool_, nullptr);
 		vkDestroySemaphore(device_, semaphore_, nullptr);
 		vkDestroyDevice(device_, nullptr);
+
+		if constexpr (useValidationLayers) {
+			auto destroyDebugUtilsMessenger = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT");
+			if (destroyDebugUtilsMessenger) {
+				destroyDebugUtilsMessenger(instance_, debugUtilsMessenger, nullptr);
+			}
+		}
+
 		vkDestroyInstance(instance_, nullptr);
 	}
 
@@ -185,12 +227,43 @@ namespace Fluxions {
 
 		size_t extension_count = extensions_.size();
 		extensions_.resize(extension_count + count);
-		if (!SDL_Vulkan_GetInstanceExtensions(window_, &count, extensions_.data() + count)) {
+		if (!SDL_Vulkan_GetInstanceExtensions(window_, &count, extensions_.data() + extension_count)) {
 			throw std::runtime_error(SDL_GetError());
 		}
 
-		auto last = std::unique(extensions_.begin(), extensions_.end(), [](const char* a, const char* b) { return (std::string(a) == std::string(b)); });
+		auto last = std::unique(extensions_.begin(), extensions_.end(),
+								[](const char* a, const char* b) {
+									return (std::string(a) == std::string(b));
+								});
 		extensions_.erase(last, extensions_.end());
+		return true;
+	}
+
+
+	bool VulkanContext::_useValidationLayer() {
+		if constexpr (!useValidationLayers) return true;
+
+		uint32_t layerCount{ 0 };
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+		availableLayerProperties.resize(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayerProperties.data());
+
+		VkLayerProperties* validationLayerProperties{ nullptr };
+		for (const char* layerName : ValidationLayerNames) {
+			for (VkLayerProperties& lp : availableLayerProperties) {
+				if (::strcmp(layerName, lp.layerName) == 0) {
+					validationLayerProperties = &lp;
+					break;
+				}
+			}
+			if (validationLayerProperties) break;
+		}
+
+		if (!validationLayerProperties) {
+			HFLOGERROR("Validation Layer not found");
+			return false;
+		}
+
 		return true;
 	}
 
@@ -209,8 +282,27 @@ namespace Fluxions {
 		instanceCreateInfo.pApplicationInfo = &applicationInfo;
 		instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions_.size());
 		instanceCreateInfo.ppEnabledExtensionNames = extensions_.data();
+		if constexpr (useValidationLayers) {
+			instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(availableLayerProperties.size());
+			instanceCreateInfo.ppEnabledLayerNames = ValidationLayerNames.data();
+		}
 
 		_handleError(vkCreateInstance(&instanceCreateInfo, NULL, &instance_));
+
+		if constexpr (useValidationLayers) {
+			VkDebugUtilsMessengerCreateInfoEXT dumci{};
+			dumci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+			dumci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+			dumci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+			dumci.pfnUserCallback = ValidationLayerCallback;
+			dumci.pUserData = nullptr;
+
+			auto createDebugUtilsMessenger = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT");
+			if (createDebugUtilsMessenger) {
+				createDebugUtilsMessenger(instance_, &dumci, nullptr, &debugUtilsMessenger);
+			}
+		}
+
 		return instance_ != nullptr;
 	}
 
@@ -253,11 +345,6 @@ namespace Fluxions {
 			}
 			HFLOGINFO("-------");
 		}
-		return true;
-	}
-
-
-	bool VulkanContext::_useValidationLayer() {
 		return true;
 	}
 
