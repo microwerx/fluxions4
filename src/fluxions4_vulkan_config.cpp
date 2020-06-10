@@ -1,4 +1,4 @@
-#include <fluxions_vulkan_config.hpp>
+#include <fluxions4_vulkan_config.hpp>
 
 namespace Fluxions {
 	// Temporary structs we will replace with our own later...
@@ -15,13 +15,6 @@ namespace Fluxions {
 
 	static uint32_t fs_spirv_source[] = {
 		#include "vkcube.frag.spv.h.in"
-	};
-
-	struct Vertex {
-		FxVector3f position;
-		FxVector3f normal;
-		FxVector3f color;
-		FxVector3f texCoord;
 	};
 
 	std::vector<Vertex> vertices{

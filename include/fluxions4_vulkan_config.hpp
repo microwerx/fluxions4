@@ -2,7 +2,7 @@
 #define FLUXIONS_VULKAN_CONFIG_HPP
 
 #include "fluxions_vulkan_context.hpp"
-#include <fluxions_vulkan_buffer.hpp>
+#include <fluxions4_vulkan_buffer.hpp>
 
 namespace Fluxions {
 	// VulkanConfig is used to for a whole render pass

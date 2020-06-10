@@ -3,8 +3,8 @@
 #include <iostream>
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
-#include <fluxions_vulkan_context.hpp>
-#include <fluxions_vulkan_config.hpp>
+#include <fluxions4_vulkan_context.hpp>
+#include <fluxions4_vulkan_config.hpp>
 #include <hatchetfish.hpp>
 
 #pragma comment(lib, "vulkan-1.lib")
@@ -70,6 +70,7 @@ public:
 private:
 	Fluxions::VulkanContext vcontext;
 	Fluxions::VulkanConfig vconfig;
+	Fluxions::VulkanMesh cube;
 };
 
 int main(int argc, char** argv) {
