@@ -39,6 +39,10 @@ namespace Fluxions {
 		VkViewport viewport_{ 0,0,0,0,0,0 };
 		VkRect2D scissor_{ 0,0,0,0 };
 
+		VkDescriptorSetLayout descriptorSetLayout_{ nullptr };
+		VkShaderModule vsShaderModule_{ nullptr };
+		VkShaderModule fsShaderModule_{ nullptr };
+		VkDescriptorPool descriptorPool_{ nullptr };
 		VkPipelineLayout pipelineLayout_{ nullptr };
 		VkPipeline pipeline_{ nullptr };
 

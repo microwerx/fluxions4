@@ -10,38 +10,38 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace Fluxions {
+	VKAPI_ATTR VkBool32 VKAPI_CALL ValidationLayerCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+		VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData) {
+
+		//if (messageType != VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) {
+		//	return VK_FALSE;
+		//}
+
+		switch (messageSeverity) {
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+			HFLOGINFO("%s", pCallbackData->pMessage);
+			break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+			HFLOGDEBUG("%s", pCallbackData->pMessage);
+			break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+			HFLOGWARN("%s", pCallbackData->pMessage);
+			break;
+		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+			HFLOGERROR("%s", pCallbackData->pMessage);
+			break;
+		}
+
+		return VK_FALSE;
+	}
+
 	namespace {
 		std::vector<const char*> ValidationLayerNames = {
 			"VK_LAYER_KHRONOS_validation"
 		};
-
-		VKAPI_ATTR VkBool32 VKAPI_CALL ValidationLayerCallback(
-			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-			VkDebugUtilsMessageTypeFlagsEXT messageType,
-			const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-			void* pUserData) {
-
-			if (messageType != VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT) {
-				return VK_FALSE;
-			}
-
-			switch (messageSeverity) {
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-				HFLOGINFO("%s", pCallbackData->pMessage);
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-				HFLOGDEBUG("%s", pCallbackData->pMessage);
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-				HFLOGWARN("%s", pCallbackData->pMessage);
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-				HFLOGERROR("%s", pCallbackData->pMessage);
-				break;
-			}
-
-			return VK_FALSE;
-		}
 	}
 
 	VulkanContext::VulkanContext() {
@@ -57,9 +57,9 @@ namespace Fluxions {
 		try {
 			if (!_createSDLWindow()) return false;
 			if (!_getSDLExtensions()) return false;
+			if (!_useValidationLayer()) return false;
 			if (!_createInstance()) return false;
 			if (!_enumerateDevices()) return false;
-			if (!_useValidationLayer()) return false;
 			if (!_checkQueueFamilyProperties()) return false;
 			if (!_createDevice()) return false;
 			if (!_createSDLVulkanSurface()) return false;
@@ -69,7 +69,7 @@ namespace Fluxions {
 			if (!_createSemaphore()) return false;
 			if (!_createSwapChain()) return false;
 		}
-		catch (const std::exception & e) {
+		catch (const std::exception& e) {
 			HFLOGERROR("failed to initialize Vulkan context: '%s'", e.what());
 			return false;
 		}
@@ -85,11 +85,19 @@ namespace Fluxions {
 			vkDestroyFence(device_, fb.fence_, nullptr);
 			vkDestroyFramebuffer(device_, fb.framebuffer_, nullptr);
 			vkDestroyImageView(device_, fb.view_, nullptr);
-			vkDestroyImage(device_, fb.image_, nullptr);
 		}
 		swapchainFramebuffers_.clear();
-		vkDestroyCommandPool(device_, commandPool_, nullptr);
+		
+		for (auto& image : swapchainImages_) {
+			vkDestroyImage(device_, image, nullptr);
+		}
+		swapchainImages_.clear();
+
 		vkDestroySemaphore(device_, semaphore_, nullptr);
+		vkDestroyCommandPool(device_, commandPool_, nullptr);
+		vkDestroyRenderPass(device_, renderPass_, nullptr);
+		vkDestroySwapchainKHR(device_, swapchain_, nullptr);
+		vkDestroySurfaceKHR(instance_, surface_, nullptr);
 		vkDestroyDevice(device_, nullptr);
 
 		if constexpr (useValidationLayers) {
@@ -112,8 +120,7 @@ namespace Fluxions {
 		vkWaitForFences(device_, 1, &fence(), VK_TRUE, UINT64_MAX);
 		vkResetFences(device_, 1, &fence());
 
-		VkCommandBufferBeginInfo commandBufferBeginInfo;
-		memset(&commandBufferBeginInfo, 0, sizeof(commandBufferBeginInfo));
+		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		commandBufferBeginInfo.flags = 0;
 		vkBeginCommandBuffer(commandBuffer(), &commandBufferBeginInfo);
@@ -138,8 +145,7 @@ namespace Fluxions {
 		vkEndCommandBuffer(commandBuffer());
 
 		VkPipelineStageFlags pipelineStageFlags[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-		VkSubmitInfo submitInfo;
-		memset(&submitInfo, 0, sizeof(submitInfo));
+		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &semaphore_;
@@ -151,8 +157,7 @@ namespace Fluxions {
 		VkResult result;
 		VkSwapchainKHR swapchains[] = { swapchain_ };
 		uint32_t imageIndices[] = { frameImageIndex_ };
-		VkPresentInfoKHR presentInfo;
-		memset(&presentInfo, 0, sizeof(presentInfo));
+		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapchains;
@@ -245,21 +250,19 @@ namespace Fluxions {
 
 		uint32_t layerCount{ 0 };
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-		availableLayerProperties.resize(layerCount);
-		vkEnumerateInstanceLayerProperties(&layerCount, availableLayerProperties.data());
+		std::vector<VkLayerProperties> instanceLayerProperties(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, instanceLayerProperties.data());
 
-		VkLayerProperties* validationLayerProperties{ nullptr };
 		for (const char* layerName : ValidationLayerNames) {
-			for (VkLayerProperties& lp : availableLayerProperties) {
+			for (VkLayerProperties& lp : instanceLayerProperties) {
 				if (::strcmp(layerName, lp.layerName) == 0) {
-					validationLayerProperties = &lp;
+					availableLayerProperties.push_back(lp);
 					break;
 				}
 			}
-			if (validationLayerProperties) break;
 		}
 
-		if (!validationLayerProperties) {
+		if (availableLayerProperties.empty()) {
 			HFLOGERROR("Validation Layer not found");
 			return false;
 		}
@@ -299,7 +302,10 @@ namespace Fluxions {
 
 			auto createDebugUtilsMessenger = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT");
 			if (createDebugUtilsMessenger) {
-				createDebugUtilsMessenger(instance_, &dumci, nullptr, &debugUtilsMessenger);
+				VkResult res = createDebugUtilsMessenger(instance_, &dumci, nullptr, &debugUtilsMessenger);
+				if (res != VK_SUCCESS) {
+					_handleError(res);
+				}
 			}
 		}
 
@@ -368,15 +374,13 @@ namespace Fluxions {
 		float queuePriorities[] = { 1.0f };
 		const char* const enabledExtensionNames[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 		// TODO: should we be using the extensions_ member instead?
-		VkDeviceQueueCreateInfo deviceQueueCreateInfo;
-		memset(&deviceQueueCreateInfo, 0, sizeof(VkDeviceQueueCreateInfo));
+		VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
 		deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		deviceQueueCreateInfo.queueFamilyIndex = 0;
 		deviceQueueCreateInfo.queueCount = 1;
 		deviceQueueCreateInfo.pQueuePriorities = queuePriorities;
 
-		VkDeviceCreateInfo deviceCreateInfo;
-		memset(&deviceCreateInfo, 0, sizeof(VkDeviceCreateInfo));
+		VkDeviceCreateInfo deviceCreateInfo{};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
@@ -553,15 +557,16 @@ namespace Fluxions {
 			throw std::runtime_error("swapchain image count exceeds max frames allowed");
 		}
 		swapchainFramebuffers_.resize(swapchainImageCount_);
-		for (uint32_t i = 0; i < swapchainImageCount_; i++) { _initImageBuffer(i, swapchainImages_[i]); }
+		for (uint32_t i = 0; i < swapchainImageCount_; i++) {
+			_initImageBuffer(i, swapchainImages_[i]);
+		}
 		return true;
 	}
 
 
 	void VulkanContext::_initImageBuffer(uint32_t i, VkImage image) {
 		swapchainFramebuffers_[i].image_ = image;
-		VkImageViewCreateInfo imageViewCreateInfo;
-		memset(&imageViewCreateInfo, 0, sizeof(VkImageViewCreateInfo));
+		VkImageViewCreateInfo imageViewCreateInfo{};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		imageViewCreateInfo.image = image;
 		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -581,8 +586,7 @@ namespace Fluxions {
 		};
 		vkCreateImageView(device_, &imageViewCreateInfo, NULL, &swapchainFramebuffers_[i].view_);
 
-		VkFramebufferCreateInfo framebufferCreateInfo;
-		memset(&framebufferCreateInfo, 0, sizeof(VkFramebufferCreateInfo));
+		VkFramebufferCreateInfo framebufferCreateInfo{};
 		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferCreateInfo.renderPass = renderPass_;
 		framebufferCreateInfo.attachmentCount = 1;
@@ -592,14 +596,12 @@ namespace Fluxions {
 		framebufferCreateInfo.layers = 1;
 		vkCreateFramebuffer(device_, &framebufferCreateInfo, NULL, &swapchainFramebuffers_[i].framebuffer_);
 
-		VkFenceCreateInfo fenceCreateInfo;
-		memset(&fenceCreateInfo, 0, sizeof(VkFenceCreateInfo));
+		VkFenceCreateInfo fenceCreateInfo{};
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		vkCreateFence(device_, &fenceCreateInfo, NULL, &swapchainFramebuffers_[i].fence_);
 
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo;
-		memset(&commandBufferAllocateInfo, 0, sizeof(VkCommandBufferAllocateInfo));
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
 		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandBufferAllocateInfo.commandPool = commandPool_;
 		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;

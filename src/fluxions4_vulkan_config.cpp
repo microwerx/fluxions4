@@ -39,16 +39,15 @@ namespace Fluxions {
 			1,                                 // bindingCount
 			descriptorSetLayoutBindings        // pBindings
 		};
-
-		VkDescriptorSetLayout descriptorSetLayout;
-		vkCreateDescriptorSetLayout(device(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout);
+		
+		vkCreateDescriptorSetLayout(device(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout_);
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, // sType
 			nullptr,                 // pNext
 			0,                       // flags
 			1,                       // setLayoutCount
-			&descriptorSetLayout,    // pSetLayouts
+			&descriptorSetLayout_,   // pSetLayouts
 			0,                       // pushConstantRangeCount
 			nullptr                  // pPushConstantRanges
 		};
@@ -79,8 +78,7 @@ namespace Fluxions {
 			sizeof(vs_spirv_source),
 			(uint32_t*)vs_spirv_source
 		};
-		VkShaderModule vsShaderModule;
-		vkCreateShaderModule(device(), &vsShaderModuleCreateInfo, nullptr, &vsShaderModule);
+		vkCreateShaderModule(device(), &vsShaderModuleCreateInfo, nullptr, &vsShaderModule_);
 
 		VkShaderModuleCreateInfo fsShaderModuleCreateInfo = {
 			VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -88,18 +86,17 @@ namespace Fluxions {
 			sizeof(fs_spirv_source),
 			(uint32_t*)fs_spirv_source
 		};
-		VkShaderModule fsShaderModule;
-		vkCreateShaderModule(device(), &fsShaderModuleCreateInfo, nullptr, &fsShaderModule);
+		vkCreateShaderModule(device(), &fsShaderModuleCreateInfo, nullptr, &fsShaderModule_);
 
 		VkPipelineCache pipelineCache = VK_NULL_HANDLE;
 		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfos[2] = {
 			{
 				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
-				VK_SHADER_STAGE_VERTEX_BIT, vsShaderModule, "main", nullptr
+				VK_SHADER_STAGE_VERTEX_BIT, vsShaderModule_, "main", nullptr
 			},
 			{
 				VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, nullptr, 0,
-				VK_SHADER_STAGE_FRAGMENT_BIT, fsShaderModule, "main", nullptr
+				VK_SHADER_STAGE_FRAGMENT_BIT, fsShaderModule_, "main", nullptr
 			},
 		};
 
@@ -322,8 +319,7 @@ namespace Fluxions {
 			1,
 			1, descriptorPoolSizes
 		};
-		VkDescriptorPool descriptorPool;
-		vkCreateDescriptorPool(device(), &descriptorPoolCreateInfo, NULL, &descriptorPool);
+		vkCreateDescriptorPool(device(), &descriptorPoolCreateInfo, NULL, &descriptorPool_);
 
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
 			//VkStructureType                 sType;
@@ -333,16 +329,16 @@ namespace Fluxions {
 			//const VkDescriptorSetLayout*    pSetLayouts;
 			VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 			nullptr,
-			descriptorPool,
-			1, &descriptorSetLayout
+			descriptorPool_,
+			1, &descriptorSetLayout_
 		};
 		vkAllocateDescriptorSets(device(), &descriptorSetAllocateInfo, &descriptorSet_);
 
-		VkDescriptorBufferInfo descriptorBufferInfo = {
+		VkDescriptorBufferInfo descriptorBufferInfo[] = {
 			//VkBuffer        buffer;
 			//VkDeviceSize    offset;
 			//VkDeviceSize    range;
-			ubo_buffer_.buffer(), 0, sizeof(struct StandardUbo)
+			{ ubo_buffer_.buffer(), 0, sizeof(struct StandardUbo) }
 		};
 
 		VkWriteDescriptorSet writeDescriptorSet = {
@@ -364,7 +360,7 @@ namespace Fluxions {
 			1,
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			nullptr,
-			&descriptorBufferInfo,
+			descriptorBufferInfo,
 			nullptr
 		};
 		vkUpdateDescriptorSets(device(), 1, &writeDescriptorSet, 0, nullptr);
@@ -378,6 +374,10 @@ namespace Fluxions {
 		ubo_buffer_.kill();
 		vkDestroyPipeline(device(), pipeline_, nullptr);
 		vkDestroyPipelineLayout(device(), pipelineLayout_, nullptr);
+		vkDestroyDescriptorPool(device(), descriptorPool_, nullptr);
+		vkDestroyShaderModule(device(), vsShaderModule_, nullptr);
+		vkDestroyShaderModule(device(), fsShaderModule_, nullptr);
+		vkDestroyDescriptorSetLayout(device(), descriptorSetLayout_, nullptr);
 	}
 
 

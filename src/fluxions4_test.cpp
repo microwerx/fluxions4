@@ -64,8 +64,8 @@ public:
 			vcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
 			vcontext.beginFrame();
 			
-			cube.copyToBuffer(vcontext);
-			cube.drawToCommandBuffer(vcontext.commandBuffer());
+			//cube.copyToBuffer(vcontext);
+			//cube.drawToCommandBuffer(vcontext.commandBuffer());
 			
 			vconfig.use(t1 * 30.0f);
 			vconfig.restore();
