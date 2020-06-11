@@ -6,6 +6,38 @@
 #include <fluxions4_vulkan_buffer.hpp>
 
 namespace Fluxions {
+	enum class PipelineDepthMode {
+		NO_DEPTH_TEST,
+		DEPTH_LESS,
+		DEPTH_LEQUAL,
+		DEPTH_EQUAL,
+		DEPTH_LESS_NO_WRITE,
+		DEPTH_LEQUAL_NO_WRITE,
+		DEPTH_EQUAL_NO_WRITE
+	};
+
+	enum class PipelineBlendMode {
+		NO_BLEND,
+		ADDITIVE,		// GL_ONE, GL_ONE
+		MULTIPLY,		// GL_SRC_COLOR, GL_ZERO
+		ALPHA_BLENDING,	// GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		LIGHTEN,		// GL_DST_COLOR, GL_SRC_COLOR
+		DARKEN,
+	};
+
+	enum class PipelineCullMode {
+		NO_CULLING,
+		CULL_BACK_FACE,
+		CULL_FRONT_FACE
+	};
+
+	struct VulkanPipelineCreateInfo {
+		VkPrimitiveTopology topology;
+		PipelineCullMode cullMode;
+		PipelineDepthMode depthMode;
+		PipelineBlendMode blendMode;
+	};
+
 	// VulkanPipeline is used to for a whole render pass
 	class VulkanPipeline {
 	public:

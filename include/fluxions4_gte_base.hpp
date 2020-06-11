@@ -37,6 +37,10 @@ inline FxVector3f normalize(FxVector3f v) {
 	return { v.x * mag,v.y * mag,v.z * mag };
 }
 
+inline FxVector3f standardize(FxVector3f v) {
+	return { v.x * 0.5f + 0.5f, v.y * 0.5f + 0.5f, v.z * 0.5f + 0.5f };
+}
+
 inline float dot(FxVector3f a, FxVector3f b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
@@ -47,6 +51,10 @@ inline FxVector3f cross(FxVector3f a, FxVector3f b) {
 		a.z * b.x - a.x * b.z,
 		a.x * b.y - a.y * b.x
 	};
+}
+
+constexpr FxVector3f operator-(FxVector3f a) {
+	return { -a.x, -a.y, -a.z };
 }
 
 struct FxMatrix4f {

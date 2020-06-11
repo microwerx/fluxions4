@@ -7,6 +7,7 @@
 #include <fluxions4_vulkan_context.hpp>
 #include <fluxions4_vulkan_pipeline.hpp>
 #include <fluxions4_simple_shapes.hpp>
+#include <fluxions4_superquadrics.hpp>
 
 #pragma comment(lib, "vulkan-1.lib")
 
@@ -28,11 +29,16 @@ public:
 		if (!vkpipeline.init()) return false;
 
 		cube = Fluxions::CreateCube();
+		sq = Fluxions::CreateSuperquadric(0.3f, 0.3f, 32, 32);
+
+		cube.copyToBuffer(vkcontext);
+		sq.copyToBuffer(vkcontext);
 
 		return true;
 	}
 
 	void kill() {
+		sq.kill();
 		cube.kill();
 		vkpipeline.kill();
 		vkcontext.kill();
@@ -67,8 +73,8 @@ public:
 			
 			vkpipeline.use(t1 * 30.0f);
 
-			cube.copyToBuffer(vkcontext);
-			cube.drawToCommandBuffer(vkcontext.commandBuffer());
+			//cube.drawToCommandBuffer(vkcontext.commandBuffer());
+			sq.drawToCommandBuffer(vkcontext.commandBuffer());
 			
 			vkpipeline.restore();
 
@@ -78,6 +84,7 @@ public:
 
 private:
 	Fluxions::VulkanMesh cube;
+	Fluxions::VulkanMesh sq;
 	Fluxions::VulkanPipeline vkpipeline;
 	Fluxions::VulkanContext vkcontext;
 };

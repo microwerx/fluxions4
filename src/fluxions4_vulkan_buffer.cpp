@@ -16,6 +16,10 @@ namespace Fluxions {
 		context_ = context;
 		if (!context_) throw std::runtime_error("VulkanBuffer::init() -> context is NULL");
 
+		if (allocationSize_) {
+			kill();
+		}
+
 		allocationSize_ = allocationSize;
 
 		VkBufferCreateInfo bufferCreateInfo = {
@@ -80,13 +84,18 @@ namespace Fluxions {
 
 
 	void VulkanBuffer::kill() {
+		if (!memory_ || !buffer_) return;
 		vkUnmapMemory(context_->device(), memory_);
 		vkFreeMemory(context_->device(), memory_, nullptr);
 		vkDestroyBuffer(context_->device(), buffer_, nullptr);
+		memory_ = nullptr;
+		buffer_ = nullptr;
+		allocationSize_ = 0;
 	}
 
 
 	bool VulkanBuffer::copyToMap(size_t offset, void* src, size_t size) {
+		if (size == 0) return false;
 		if (offset + size > allocationSize_) return false;
 		memcpy(map_ + offset, src, size);
 		return true;

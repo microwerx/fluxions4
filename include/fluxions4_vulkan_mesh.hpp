@@ -8,9 +8,9 @@
 
 namespace Fluxions {
 	struct VulkanSurface {
-		uint32_t vertexCount;
+		uint32_t count;
 		uint32_t instanceCount;
-		uint32_t firstVertex;
+		uint32_t first;
 		uint32_t firstInstance;
 	};
 
@@ -23,10 +23,16 @@ namespace Fluxions {
 		void kill();
 
 		// resizes the host vertex array
-		void resize(size_t count);
+		void resizeVertices(size_t count);
+
+		// resizes the host index array
+		void resizeIndices(size_t count);
 
 		// updates the memory buffer with new vertices
-		void update(VulkanVertex* newVertices, size_t start, size_t count);
+		void updateVertexData(VulkanVertex* newVertices, size_t start, size_t count);
+
+		// updates the memory buffer with new indices
+		void updateIndexData(uint32_t* newIndices, size_t start, size_t count);
 
 		// adds a surface to render with this mesh
 		void drawSurface(VulkanSurface surface);
@@ -42,13 +48,16 @@ namespace Fluxions {
 
 	private:
 		std::vector<VulkanVertex> vertices;
+		std::vector<uint32_t> indices;
 		std::vector<VulkanSurface> surfaces;
 
-		static constexpr int DIRTY_FLAG = 1;
-		static constexpr int INIT_FLAG = 2;
+		static constexpr int VBO_DIRTY_FLAG = 1;
+		static constexpr int IBO_DIRTY_FLAG = 2;
+		static constexpr int INIT_FLAG = 3;
 
 		std::bitset<32> flags;
 		VulkanBuffer vbo;
+		VulkanBuffer ibo;
 	};
 }
 

@@ -13,23 +13,40 @@ namespace Fluxions {
 
 	void VulkanMesh::kill() {
 		vbo.kill();
+		ibo.kill();
 	}
 
 
-	void VulkanMesh::resize(size_t count) {
+	void VulkanMesh::resizeVertices(size_t count) {
 		vertices.resize(count);
 	}
 
 
-	void VulkanMesh::update(VulkanVertex* newVertices, size_t start, size_t count) {
+	void VulkanMesh::resizeIndices(size_t count) {
+		indices.resize(count);
+	}
+
+
+	void VulkanMesh::updateVertexData(VulkanVertex* newVertices, size_t start, size_t count) {
 		if (start + count > vertices.size()) {
-			HFLOGERROR("mesh size is smaller than input data");
+			HFLOGERROR("mesh vertex size is smaller than input data");
 			return;
 		}
 
 		memcpy(&vertices[start], newVertices, count * sizeof(VulkanVertex));
-		flags.set(DIRTY_FLAG);
-	};
+		flags.set(VBO_DIRTY_FLAG);
+	}
+
+
+	void VulkanMesh::updateIndexData(uint32_t* newIndices, size_t start, size_t count) {
+		if (start + count > indices.size()) {
+			HFLOGERROR("mesh index size is smaller than input data");
+			return;
+		}
+
+		memcpy(&indices[start], newIndices, count * sizeof(uint32_t));
+		flags.set(IBO_DIRTY_FLAG);
+	}
 
 
 	void VulkanMesh::drawSurface(VulkanSurface surface) {
@@ -43,31 +60,47 @@ namespace Fluxions {
 
 
 	void VulkanMesh::copyToBuffer(VulkanContext& context) {
-		if (!flags.test(DIRTY_FLAG)) return;
-
-		size_t allocationSize = vertices.size() * sizeof(VulkanVertex);
-
-		if (!flags.test(INIT_FLAG)) {
-			if (vbo.init(&context, allocationSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT))
-				flags.set(INIT_FLAG);
-			else
-				HFLOGERROR("Unable to initialize VBO");
+		if (flags.test(VBO_DIRTY_FLAG)) {
+			size_t vertexSize = vertices.size() * sizeof(VulkanVertex);
+			if (vertexSize > vbo.size()) {
+				vbo.init(&context, vertexSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+			}
+			if (!vertices.empty()) {
+				vbo.copyToMap(0, &vertices[0], vertexSize);
+			}
+			flags.reset(VBO_DIRTY_FLAG);
 		}
 
-		if (flags.test(INIT_FLAG)) {
-			vbo.copyToMap(0, &vertices[0], allocationSize);
-			flags.reset(DIRTY_FLAG);
+		if (flags.test(IBO_DIRTY_FLAG)) {
+			size_t indexSize = indices.size() * sizeof(uint32_t);
+			if (indexSize > ibo.size()) {
+				ibo.init(&context, indexSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+			}
+			if (!indices.empty()) {
+				ibo.copyToMap(0, &indices[0], indexSize);
+			}
+			flags.reset(IBO_DIRTY_FLAG);
 		}
 	}
 
 
 	void VulkanMesh::drawToCommandBuffer(VkCommandBuffer commandBuffer) {
+		if (surfaces.empty()) return;
+
 		VkBuffer buffers[] = { vbo.buffer() };
 		VkDeviceSize offsets[] = { 0 };
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
-		for (auto& s : surfaces) {
-			vkCmdDraw(commandBuffer, s.vertexCount, s.instanceCount, s.firstVertex, s.firstInstance);
+		if (indices.empty()) {
+			for (auto& s : surfaces) {
+				vkCmdDraw(commandBuffer, s.count, s.instanceCount, s.first, s.firstInstance);
+			}
+		}
+		else {
+			vkCmdBindIndexBuffer(commandBuffer, ibo.buffer(), 0, VK_INDEX_TYPE_UINT32);
+			for (auto& s : surfaces) {
+				vkCmdDrawIndexed(commandBuffer, s.count, s.instanceCount, s.first, 0, s.firstInstance);
+			}
 		}
 	}
 }
