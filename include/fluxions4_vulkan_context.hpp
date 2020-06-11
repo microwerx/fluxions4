@@ -32,12 +32,11 @@ namespace Fluxions {
 		bool beginFrame();
 		void presentFrame();
 
-		VkSurfaceKHR& surface() { return surface_; }
-		VkDevice& device() { return device_; }
-		VkQueue& queue() { return queue_; }
-		VkRenderPass& renderPass() { return renderPass_; }
-		VkSemaphore& semaphore() { return semaphore_; }
-		uint32_t findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
+		VkSurfaceKHR surface() { return surface_; }
+		VkDevice device() { return device_; }
+		VkQueue queue() { return queue_; }
+		VkRenderPass renderPass() { return renderPass_; }
+		VkSemaphore semaphore() { return semaphore_; }
 		uint32_t width() const { return width_; }
 		uint32_t height() const { return height_; }
 		uint32_t maxSets() const { return static_cast<uint32_t>(swapchainFramebuffers_.size()); }
@@ -46,10 +45,27 @@ namespace Fluxions {
 		VkCommandBuffer& commandBuffer() { return swapchainFramebuffers_[frameImageIndex_].commandBuffer_; }
 		VkFramebuffer& framebuffer() { return swapchainFramebuffers_[frameImageIndex_].framebuffer_; }
 
+		uint32_t findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
+		VkFormatProperties getFormatProperties(VkFormat format);
+
 		uint32_t majorVersion() const { return VK_VERSION_MAJOR(version_); }
 		uint32_t minorVersion() const { return VK_VERSION_MINOR(version_); }
 		uint32_t patchVersion() const { return VK_VERSION_PATCH(version_); }
+
+		// Static member to get recently created context
+		// - returns nullptr if not initialized
+		static VulkanContext* GetContext() { return recentlyUsedContext_; }
+		
+		// Static member to get device of recently created context
+		// - returns nullptr if device not available
+		static VkDevice GetDevice() {
+			if (recentlyUsedContext_)
+				return recentlyUsedContext_->device();
+			return nullptr;
+		}
+
 	private:
+		static VulkanContext* recentlyUsedContext_;
 		std::string name_;
 		std::string title_;
 		uint32_t width_{ 1280 };

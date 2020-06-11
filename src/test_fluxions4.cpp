@@ -68,17 +68,24 @@ public:
 				}
 			}
 
+			Fluxions::VulkanMesh squadric;
+			squadric = Fluxions::CreateSuperquadric(2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(t1), 33, 17);
+			squadric.copyToBuffer(vkcontext);
+
 			vkcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
 			vkcontext.beginFrame();
-			
+
 			vkpipeline.use(t1 * 30.0f);
 
 			//cube.drawToCommandBuffer(vkcontext.commandBuffer());
-			sq.drawToCommandBuffer(vkcontext.commandBuffer());
-			
+			//sq.drawToCommandBuffer(vkcontext.commandBuffer());
+			squadric.drawToCommandBuffer(vkcontext.commandBuffer());
+
 			vkpipeline.restore();
 
 			vkcontext.presentFrame();
+
+			squadric.kill();
 		}
 	}
 
@@ -97,7 +104,7 @@ int main(int argc, char** argv) {
 			ta.kill();
 		}
 	}
-	catch (const std::exception & e) {
+	catch (const std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}
 	return 0;

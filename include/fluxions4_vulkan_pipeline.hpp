@@ -26,9 +26,10 @@ namespace Fluxions {
 	};
 
 	enum class PipelineCullMode {
-		NO_CULLING,
-		CULL_BACK_FACE,
-		CULL_FRONT_FACE
+		CULL_NONE = VK_CULL_MODE_NONE,
+		CULL_MODE_BACK = VK_CULL_MODE_BACK_BIT,
+		CULL_MODE_FRONT = VK_CULL_MODE_FRONT_BIT,
+		CULL_MODE_FRONT_AND_BACK = VK_CULL_MODE_FRONT_AND_BACK
 	};
 
 	struct VulkanPipelineCreateInfo {

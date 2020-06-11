@@ -60,6 +60,9 @@
     <ClCompile Include="src\test_fluxions4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\vkcube.frag">
@@ -134,6 +137,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\fluxions4_vulkan_pipeline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_image.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

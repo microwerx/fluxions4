@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="src\fluxions4_simple_shapes.cpp" />
     <ClCompile Include="src\fluxions4_superquadrics.cpp" />
+    <ClCompile Include="src\fluxions4_vulkan_image.cpp" />
     <ClCompile Include="src\test_fluxions4.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_buffer.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_pipeline.cpp" />
@@ -196,6 +197,7 @@
     <ClInclude Include="include\fluxions4_simple_shapes.hpp" />
     <ClInclude Include="include\fluxions4_superquadrics.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_buffer.hpp" />
+    <ClInclude Include="include\fluxions4_vulkan_image.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_pipeline.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_context.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_mesh.hpp" />

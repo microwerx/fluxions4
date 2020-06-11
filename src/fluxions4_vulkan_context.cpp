@@ -44,6 +44,10 @@ namespace Fluxions {
 		};
 	}
 
+
+	VulkanContext* VulkanContext::recentlyUsedContext_{ nullptr };
+
+
 	VulkanContext::VulkanContext() {
 		memset(&pdMemoryProperties_, 0, sizeof(VkPhysicalDeviceMemoryProperties));
 		memset(&pdProperties_, 0, sizeof(VkPhysicalDeviceProperties));
@@ -54,6 +58,8 @@ namespace Fluxions {
 
 
 	bool VulkanContext::init() {
+		recentlyUsedContext_ = this;
+
 		try {
 			if (!_createSDLWindow()) return false;
 			if (!_getSDLExtensions()) return false;
@@ -87,7 +93,7 @@ namespace Fluxions {
 			vkDestroyImageView(device_, fb.view_, nullptr);
 		}
 		swapchainFramebuffers_.clear();
-		
+
 		vkDestroySemaphore(device_, semaphore_, nullptr);
 		vkDestroyCommandPool(device_, commandPool_, nullptr);
 		vkDestroyRenderPass(device_, renderPass_, nullptr);
@@ -177,6 +183,12 @@ namespace Fluxions {
 		return VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM;
 	}
 
+
+	VkFormatProperties VulkanContext::getFormatProperties(VkFormat format) {
+		VkFormatProperties properties;
+		vkGetPhysicalDeviceFormatProperties(pd_, format, &properties);
+		return properties;
+	}
 
 	////////////////////////////////////////////////////////////////////////////
 	// PRIVATE IMPLEMENTATION //////////////////////////////////////////////////
@@ -270,12 +282,12 @@ namespace Fluxions {
 		vkEnumerateInstanceVersion(&version_);
 		HFLOGINFO("Instance Version: %d.%d.%d", majorVersion(), minorVersion(), patchVersion());
 
-		VkApplicationInfo applicationInfo = {};
+		VkApplicationInfo applicationInfo{};
 		applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		applicationInfo.pApplicationName = name_.c_str();
 		applicationInfo.apiVersion = version_;
 
-		VkInstanceCreateInfo instanceCreateInfo = {};
+		VkInstanceCreateInfo instanceCreateInfo{};
 		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instanceCreateInfo.pApplicationInfo = &applicationInfo;
 		instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions_.size());
@@ -434,7 +446,7 @@ namespace Fluxions {
 
 
 	bool VulkanContext::_createRenderPass() {
-		VkAttachmentDescription attachmentDescription = {};
+		VkAttachmentDescription attachmentDescription{};
 		attachmentDescription.format = renderPassImageFormat_;
 		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -442,15 +454,15 @@ namespace Fluxions {
 		attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkAttachmentReference colorAttachment = {};
+		VkAttachmentReference colorAttachment{};
 		colorAttachment.attachment = 0;
 		colorAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentReference resolveAttachment = {};
+		VkAttachmentReference resolveAttachment{};
 		resolveAttachment.attachment = VK_ATTACHMENT_UNUSED;
 		resolveAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDescription subpassDescription = {};
+		VkSubpassDescription subpassDescription{};
 		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpassDescription.inputAttachmentCount = 0;
 		subpassDescription.colorAttachmentCount = 1;
@@ -460,7 +472,7 @@ namespace Fluxions {
 		subpassDescription.preserveAttachmentCount = 0;
 		subpassDescription.pPreserveAttachments = NULL;
 
-		VkRenderPassCreateInfo renderPassCreateInfo = {};
+		VkRenderPassCreateInfo renderPassCreateInfo{};
 		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		renderPassCreateInfo.attachmentCount = 1;
 		renderPassCreateInfo.pAttachments = &attachmentDescription;
@@ -474,7 +486,7 @@ namespace Fluxions {
 
 
 	bool VulkanContext::_createCommandPool() {
-		VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+		VkCommandPoolCreateInfo commandPoolCreateInfo{};
 		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		commandPoolCreateInfo.queueFamilyIndex = 0;
@@ -484,7 +496,7 @@ namespace Fluxions {
 
 
 	bool VulkanContext::_createSemaphore() {
-		VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+		VkSemaphoreCreateInfo semaphoreCreateInfo{};
 		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 		vkCreateSemaphore(device_, &semaphoreCreateInfo, NULL, &semaphore_);
 		return semaphore_ != nullptr;
@@ -492,7 +504,7 @@ namespace Fluxions {
 
 
 	bool VulkanContext::_createSwapChain() {
-		VkSurfaceCapabilitiesKHR surface_caps = {};
+		VkSurfaceCapabilitiesKHR surface_caps{};
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd_, surface_, &surface_caps);
 		if (!(surface_caps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR))
 			throw std::runtime_error("Surface capabilities does not support VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR");
@@ -527,7 +539,7 @@ namespace Fluxions {
 		}
 		uint32_t queueFamilyIndices[] = { 0 };
 
-		VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+		VkSwapchainCreateInfoKHR swapchainCreateInfo{};
 		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchainCreateInfo.surface = surface_;
 		swapchainCreateInfo.minImageCount = minImageCount;

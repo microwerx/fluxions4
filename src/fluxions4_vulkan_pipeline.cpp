@@ -173,6 +173,18 @@ namespace Fluxions {
 
 
 	bool VulkanPipeline::_createGraphicsPipeline() {
+		VulkanPipelineCreateInfo vpci = {
+			//VkPrimitiveTopology topology;
+			//PipelineCullMode cullMode;
+			//PipelineDepthMode depthMode;
+			//PipelineBlendMode blendMode;
+			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+			PipelineCullMode::CULL_MODE_BACK,
+			PipelineDepthMode::DEPTH_LESS,
+			PipelineBlendMode::ALPHA_BLENDING
+		};
+
+
 		VkPipelineCache pipelineCache = VK_NULL_HANDLE;
 		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfos[2] = {
 			{
@@ -207,7 +219,9 @@ namespace Fluxions {
 			//VkBool32                                   primitiveRestartEnable;
 			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			nullptr, 0,
-			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+			vpci.topology,
+			//VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+			//VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
 			VK_FALSE
 		};
 
@@ -254,7 +268,8 @@ namespace Fluxions {
 			VK_FALSE,
 			VK_FALSE,
 			VK_POLYGON_MODE_FILL,
-			VK_CULL_MODE_BACK_BIT,
+			//VK_POLYGON_MODE_LINE,
+			VK_CULL_MODE_NONE,
 			VK_FRONT_FACE_CLOCKWISE,
 			VK_FALSE,
 			0.0f,
@@ -262,6 +277,17 @@ namespace Fluxions {
 			0.0f,
 			1.0f
 		};
+		switch (vpci.cullMode) {
+		case PipelineCullMode::CULL_NONE:
+			pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
+			break;
+		case PipelineCullMode::CULL_MODE_BACK:
+			pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+			break;
+		case PipelineCullMode::CULL_MODE_FRONT:
+			pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+			break;
+		}
 
 		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = {
 			//VkStructureType                          sType;
@@ -298,9 +324,12 @@ namespace Fluxions {
 			//float                                     maxDepthBounds;
 			VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			nullptr, 0,
-			VK_FALSE,
-			VK_FALSE,
-			VK_COMPARE_OP_NEVER,
+			VK_TRUE,
+			VK_TRUE,
+			VK_COMPARE_OP_LESS,
+			//VK_FALSE,
+			//VK_FALSE,
+			//VK_COMPARE_OP_NEVER,
 			VK_FALSE,
 			VK_FALSE,
 			{ VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_NEVER, 0, 0, 0 },
