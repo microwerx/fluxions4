@@ -40,6 +40,7 @@ namespace Fluxions {
 		uint32_t findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
 		uint32_t width() const { return width_; }
 		uint32_t height() const { return height_; }
+		uint32_t maxSets() const { return static_cast<uint32_t>(swapchainFramebuffers_.size()); }
 
 		VkFence& fence() { return swapchainFramebuffers_[frameImageIndex_].fence_; }
 		VkCommandBuffer& commandBuffer() { return swapchainFramebuffers_[frameImageIndex_].commandBuffer_; }

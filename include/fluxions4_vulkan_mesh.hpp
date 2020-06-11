@@ -20,6 +20,8 @@ namespace Fluxions {
 		VulkanMesh();
 		~VulkanMesh();
 
+		void kill();
+
 		// resizes the host vertex array
 		void resize(size_t count);
 

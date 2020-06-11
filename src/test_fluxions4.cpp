@@ -5,14 +5,14 @@
 #include <SDL2/SDL.h>
 #include <hatchetfish.hpp>
 #include <fluxions4_vulkan_context.hpp>
-#include <fluxions4_vulkan_config.hpp>
+#include <fluxions4_vulkan_pipeline.hpp>
 #include <fluxions4_simple_shapes.hpp>
 
 #pragma comment(lib, "vulkan-1.lib")
 
 class TestApp {
 public:
-	TestApp() : vconfig(vcontext) {
+	TestApp() : vkpipeline(vkcontext) {
 
 	}
 
@@ -22,10 +22,10 @@ public:
 
 	bool init() {
 		SDL_Init(SDL_INIT_VIDEO);
-		vcontext.setName("HelloWorld");
-		vcontext.setWindowTitle("Hello, World");
-		if (!vcontext.init()) return false;
-		if (!vconfig.init()) return false;
+		vkcontext.setName("HelloWorld");
+		vkcontext.setWindowTitle("Hello, World");
+		if (!vkcontext.init()) return false;
+		if (!vkpipeline.init()) return false;
 
 		cube = Fluxions::CreateCube();
 
@@ -33,8 +33,9 @@ public:
 	}
 
 	void kill() {
-		vconfig.kill();
-		vcontext.kill();
+		cube.kill();
+		vkpipeline.kill();
+		vkcontext.kill();
 		SDL_Quit();
 	}
 
@@ -61,23 +62,24 @@ public:
 				}
 			}
 
-			vcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
-			vcontext.beginFrame();
+			vkcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
+			vkcontext.beginFrame();
 			
-			//cube.copyToBuffer(vcontext);
-			//cube.drawToCommandBuffer(vcontext.commandBuffer());
-			
-			vconfig.use(t1 * 30.0f);
-			vconfig.restore();
+			vkpipeline.use(t1 * 30.0f);
 
-			vcontext.presentFrame();
+			cube.copyToBuffer(vkcontext);
+			cube.drawToCommandBuffer(vkcontext.commandBuffer());
+			
+			vkpipeline.restore();
+
+			vkcontext.presentFrame();
 		}
 	}
 
 private:
-	Fluxions::VulkanContext vcontext;
-	Fluxions::VulkanConfig vconfig;
 	Fluxions::VulkanMesh cube;
+	Fluxions::VulkanPipeline vkpipeline;
+	Fluxions::VulkanContext vkcontext;
 };
 
 int main(int argc, char** argv) {

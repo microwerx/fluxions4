@@ -11,6 +11,11 @@ namespace Fluxions {
 	VulkanMesh::~VulkanMesh() {}
 
 
+	void VulkanMesh::kill() {
+		vbo.kill();
+	}
+
+
 	void VulkanMesh::resize(size_t count) {
 		vertices.resize(count);
 	}
@@ -62,8 +67,7 @@ namespace Fluxions {
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 
 		for (auto& s : surfaces) {
-			//vkCmdDraw(commandBuffer, s.vertexCount, s.instanceCount, s.firstVertex, s.firstInstance);
+			vkCmdDraw(commandBuffer, s.vertexCount, s.instanceCount, s.firstVertex, s.firstInstance);
 		}
-		//vkCmdDraw(commandBuffer, 4, 1, 0, 0);
 	}
 }

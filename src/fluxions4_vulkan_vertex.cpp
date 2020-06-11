@@ -3,6 +3,8 @@
 
 
 namespace Fluxions {
+	static constexpr uint32_t Binding = 0;
+
 	std::array<VkVertexInputBindingDescription, 1> VulkanVertex::GetBindingDescriptions() {
 		//uint32_t             binding;
 		//uint32_t             stride;
@@ -19,6 +21,10 @@ namespace Fluxions {
 		//VkFormat    format;
 		//uint32_t    offset;
 		std::array<VkVertexInputAttributeDescription, 4> viads;
+
+		// Note: the binding (second element) should match the VertexInputBindingDescription
+		// from the previous description
+
 		viads[0] = { 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VulkanVertex, position) };
 		viads[1] = { 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VulkanVertex, normal) };
 		viads[2] = { 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(VulkanVertex, color) };

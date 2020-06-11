@@ -1,15 +1,16 @@
 #ifndef FLUXIONS_VULKAN_CONFIG_HPP
 #define FLUXIONS_VULKAN_CONFIG_HPP
 
-#include "fluxions4_vulkan_context.hpp"
+#include <array>
+#include <fluxions4_vulkan_context.hpp>
 #include <fluxions4_vulkan_buffer.hpp>
 
 namespace Fluxions {
-	// VulkanConfig is used to for a whole render pass
-	class VulkanConfig {
+	// VulkanPipeline is used to for a whole render pass
+	class VulkanPipeline {
 	public:
-		VulkanConfig(VulkanContext& vc);
-		~VulkanConfig();
+		VulkanPipeline(VulkanContext& vc);
+		~VulkanPipeline();
 
 		bool init();
 		void kill();
@@ -39,23 +40,28 @@ namespace Fluxions {
 		VkViewport viewport_{ 0,0,0,0,0,0 };
 		VkRect2D scissor_{ 0,0,0,0 };
 
-		VkDescriptorSetLayout descriptorSetLayout_{ nullptr };
 		VkShaderModule vsShaderModule_{ nullptr };
 		VkShaderModule fsShaderModule_{ nullptr };
 		VkDescriptorPool descriptorPool_{ nullptr };
 		VkPipelineLayout pipelineLayout_{ nullptr };
 		VkPipeline pipeline_{ nullptr };
 
-		uint32_t vertex_offset_{ 0 };
-		uint32_t colors_offset_{ 0 };
-		uint32_t normals_offset_{ 0 };
-		VkDescriptorSet descriptorSet_{ nullptr };
+		VkDescriptorSetLayout descriptorSetLayout_{ nullptr };
+		static constexpr uint32_t MaxBindings = 2;
+		//std::array<VkDescriptorSetLayout, MaxBindings> descriptorSetLayouts_;
 
-		//VkBuffer buffer_{ nullptr };
-		//VkDeviceMemory deviceMemory_{ nullptr };
-		//uint8_t* map_{ nullptr };
+		VkDescriptorSet descriptorSet_{ nullptr };
+		//static constexpr uint32_t MaxDescriptorSets = 2;
+		//std::array<VkDescriptorSet, MaxDescriptorSets> descriptorSets_{};
 
 		VulkanBuffer ubo_buffer_;
+
+		bool _createShaders();
+		bool _createPipelineLayout();
+		bool _createGraphicsPipeline();
+		bool _createDescriptorPool();
+		bool _createDescriptorSet();
+		bool _createDescriptor(uint32_t binding, VkDescriptorType type);
 	};
 }
 
