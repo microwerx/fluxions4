@@ -47,8 +47,20 @@ namespace Fluxions {
 		return normalize(v);
 	}
 
-	VulkanMesh CreateSuperquadric(float eta1, float eta2, uint32_t slices, uint32_t stacks) {
-		VulkanMesh mesh;
+	FxVector3f sqENormal(float n, float w, float theta, float phi) {
+		constexpr float delta = 0.001f;
+		FxVector3f a = sqE(n, w, theta - delta, phi);
+		FxVector3f b = sqE(n, w, theta + delta, phi);
+		FxVector3f c = sqE(n, w, theta, phi - delta);
+		FxVector3f d = sqE(n, w, theta, phi + delta);
+		FxVector3f edge1 = b - a;
+		FxVector3f edge2 = d - c;
+		FxVector3f N = cross(edge1, edge2);
+		return normalize(N);
+	}
+
+	void CreateSuperquadric(VulkanMesh& mesh, float eta1, float eta2, uint32_t slices, uint32_t stacks) {
+		mesh.init();
 
 		uint32_t curVertex = 0;
 		mesh.resizeVertices(2 * (1 + slices) * (1 + stacks));
@@ -70,10 +82,10 @@ namespace Fluxions {
 
 				// top and bottom
 				v[0].position = sqE(eta1, eta2, theta, phi + dphi);
-				v[0].normal = sqEN(eta1, eta2, theta, phi + dphi);
+				v[0].normal = sqENormal(eta1, eta2, theta, phi + dphi);
 				v[0].color = { 0.0f, 1.0f, 1.0f };// v[0].normal;
 				v[1].position = sqE(eta1, eta2, theta, phi);
-				v[1].normal = sqEN(eta1, eta2, theta, phi);
+				v[1].normal = sqENormal(eta1, eta2, theta, phi);
 				v[1].color = { 1.0f, 0.0f, 1.0f };// v[1].normal;
 
 				mesh.updateVertexData(v, curVertex, 2);
@@ -97,6 +109,6 @@ namespace Fluxions {
 		//	}
 		//}
 
-		return mesh;
+		mesh.copyToBuffer();
 	}
 }

@@ -6,10 +6,10 @@
 namespace Fluxions {
 	class VulkanBuffer {
 	public:
-		VulkanBuffer();
-		~VulkanBuffer();
+		VulkanBuffer() {}
+		~VulkanBuffer() { kill(); }
 
-		bool init(VulkanContext* context, VkDeviceSize allocationSize, VkBufferUsageFlags usage);
+		bool init(VkDeviceSize allocationSize, VkBufferUsageFlags usage);
 		void kill();
 
 		VkBuffer& buffer() { return buffer_; }
@@ -20,7 +20,7 @@ namespace Fluxions {
 		VkBuffer buffer_{ nullptr };
 		VkDeviceMemory memory_{ nullptr };
 		uint8_t* map_{ nullptr };
-		VulkanContext* context_{ nullptr };
+		//VulkanContext* context_{ nullptr };
 	};
 }
 

@@ -57,10 +57,16 @@
     <ClCompile Include="src\fluxions4_vulkan_pipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\fluxions4_vulkan_render_pass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\test_fluxions4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\fluxions4_vulkan_image.cpp">
+    <ClCompile Include="src\fluxions4_vulkan_descriptor_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -130,9 +136,6 @@
     <ClInclude Include="include\fluxions4_ecs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\fluxions4_vulkan_ubo.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\fluxions4_vulkan_vertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,6 +143,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\fluxions4_vulkan_image.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_render_pass.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\fluxions4_vulkan_descriptor_set.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -149,7 +149,9 @@
   <ItemGroup>
     <ClCompile Include="src\fluxions4_simple_shapes.cpp" />
     <ClCompile Include="src\fluxions4_superquadrics.cpp" />
+    <ClCompile Include="src\fluxions4_vulkan_descriptor_set.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_image.cpp" />
+    <ClCompile Include="src\fluxions4_vulkan_render_pass.cpp" />
     <ClCompile Include="src\test_fluxions4.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_buffer.cpp" />
     <ClCompile Include="src\fluxions4_vulkan_pipeline.cpp" />
@@ -201,7 +203,8 @@
     <ClInclude Include="include\fluxions4_vulkan_pipeline.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_context.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_mesh.hpp" />
-    <ClInclude Include="include\fluxions4_vulkan_ubo.hpp" />
+    <ClInclude Include="include\fluxions4_vulkan_render_pass.hpp" />
+    <ClInclude Include="include\fluxions4_vulkan_descriptor_set.hpp" />
     <ClInclude Include="include\fluxions4_vulkan_vertex.hpp" />
     <ClInclude Include="include\hatchetfish.hpp" />
     <ClInclude Include="include\hatchetfish_log.hpp" />

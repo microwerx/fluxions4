@@ -67,7 +67,8 @@ namespace Fluxions {
 		VkMemoryAllocateInfo mai{};
 		mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		mai.allocationSize = mr.size;
-		mai.memoryTypeIndex = context->findMemoryTypeIndex(mr.memoryTypeBits);
+		mai.memoryTypeIndex = context->findMemoryTypeIndex(mr.memoryTypeBits,
+														   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		if (vkAllocateMemory(device, &mai, nullptr, &deviceMemory_) != VK_SUCCESS) {
 			HFLOGERROR("Could not allocate image memory");
@@ -106,7 +107,16 @@ namespace Fluxions {
 	}
 
 	void VulkanImage::kill() {
+		VkDevice device = VulkanContext::GetDevice();
+		if (!device || !image_) return;
 
+		vkDestroyImageView(device, imageView_, nullptr);
+		vkDestroyImage(device, image_, nullptr);
+		vkFreeMemory(device, deviceMemory_, nullptr);
+
+		imageView_ = nullptr;
+		image_ = nullptr;
+		deviceMemory_ = nullptr;
 	}
 
 

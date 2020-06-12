@@ -6,7 +6,7 @@
 
 
 namespace Fluxions {
-	VulkanMesh CreateCube();
+	void CreateCube(VulkanMesh& mesh);
 }
 
 #endif

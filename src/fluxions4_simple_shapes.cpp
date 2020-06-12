@@ -160,8 +160,8 @@ namespace Fluxions {
 		};
 	}
 
-	VulkanMesh CreateCube() {
-		VulkanMesh mesh;
+	void CreateCube(VulkanMesh& mesh) {
+		mesh.init();
 
 		mesh.resizeVertices(24);
 		mesh.updateVertexData(&cubeVertices[0], 0, cubeVertices.size());
@@ -172,6 +172,6 @@ namespace Fluxions {
 			mesh.drawSurface(s);
 		}
 
-		return mesh;
+		mesh.copyToBuffer();
 	}
 }

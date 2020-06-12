@@ -5,15 +5,16 @@
 namespace Fluxions {
 
 
-	VulkanMesh::VulkanMesh() {}
-
-
-	VulkanMesh::~VulkanMesh() {}
-
+	void VulkanMesh::init() {
+		flags.set(INIT_FLAG);
+	}
 
 	void VulkanMesh::kill() {
-		vbo.kill();
-		ibo.kill();
+		if (flags.test(INIT_FLAG)) {
+			vbo.kill();
+			ibo.kill();
+			flags.reset(INIT_FLAG);
+		}
 	}
 
 
@@ -59,11 +60,11 @@ namespace Fluxions {
 	}
 
 
-	void VulkanMesh::copyToBuffer(VulkanContext& context) {
+	void VulkanMesh::copyToBuffer() {
 		if (flags.test(VBO_DIRTY_FLAG)) {
 			size_t vertexSize = vertices.size() * sizeof(VulkanVertex);
 			if (vertexSize > vbo.size()) {
-				vbo.init(&context, vertexSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+				vbo.init(vertexSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 			}
 			if (!vertices.empty()) {
 				vbo.copyToMap(0, &vertices[0], vertexSize);
@@ -74,7 +75,7 @@ namespace Fluxions {
 		if (flags.test(IBO_DIRTY_FLAG)) {
 			size_t indexSize = indices.size() * sizeof(uint32_t);
 			if (indexSize > ibo.size()) {
-				ibo.init(&context, indexSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+				ibo.init(indexSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 			}
 			if (!indices.empty()) {
 				ibo.copyToMap(0, &indices[0], indexSize);
@@ -84,7 +85,8 @@ namespace Fluxions {
 	}
 
 
-	void VulkanMesh::drawToCommandBuffer(VkCommandBuffer commandBuffer) {
+	void VulkanMesh::draw() {
+		VkCommandBuffer commandBuffer = VulkanContext::GetCommandBuffer();
 		if (surfaces.empty()) return;
 
 		VkBuffer buffers[] = { vbo.buffer() };

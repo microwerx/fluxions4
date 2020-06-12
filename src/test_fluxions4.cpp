@@ -28,18 +28,20 @@ public:
 		if (!vkcontext.init()) return false;
 		if (!vkpipeline.init()) return false;
 
-		cube = Fluxions::CreateCube();
-		sq = Fluxions::CreateSuperquadric(0.3f, 0.3f, 32, 32);
+		MakeDescriptorSet(vkpipeline, cubeDS);
+		MakeDescriptorSet(vkpipeline, sqDS);
 
-		cube.copyToBuffer(vkcontext);
-		sq.copyToBuffer(vkcontext);
+		Fluxions::CreateCube(cube);
 
 		return true;
 	}
 
 	void kill() {
-		sq.kill();
 		cube.kill();
+		sq.kill();
+		// descriptor sets must be killed before pipeline
+		sqDS.kill();
+		cubeDS.kill();
 		vkpipeline.kill();
 		vkcontext.kill();
 		SDL_Quit();
@@ -68,30 +70,33 @@ public:
 				}
 			}
 
-			Fluxions::VulkanMesh squadric;
-			squadric = Fluxions::CreateSuperquadric(2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(t1), 33, 17);
-			squadric.copyToBuffer(vkcontext);
+			Fluxions::CreateSuperquadric(sq, 2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(1.05f * t1), 56, 28);
+
+			sqDS.useDELETEME(t1 * 30.0f, -2.0f);
+			cubeDS.useDELETEME(t1 * 25.0f, 2.0f);
 
 			vkcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
 			vkcontext.beginFrame();
 
-			vkpipeline.use(t1 * 30.0f);
+			vkpipeline.use(cubeDS);
+			cube.draw();
 
-			//cube.drawToCommandBuffer(vkcontext.commandBuffer());
-			//sq.drawToCommandBuffer(vkcontext.commandBuffer());
-			squadric.drawToCommandBuffer(vkcontext.commandBuffer());
+			vkpipeline.use(sqDS);
+			sq.draw();
 
 			vkpipeline.restore();
 
 			vkcontext.presentFrame();
-
-			squadric.kill();
 		}
 	}
 
 private:
-	Fluxions::VulkanMesh cube;
+	Fluxions::VulkanMesh cube;	
 	Fluxions::VulkanMesh sq;
+
+	Fluxions::VulkanDescriptorSet cubeDS;
+	Fluxions::VulkanDescriptorSet sqDS;
+
 	Fluxions::VulkanPipeline vkpipeline;
 	Fluxions::VulkanContext vkcontext;
 };

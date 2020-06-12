@@ -6,7 +6,7 @@
 
 
 namespace Fluxions {
-	VulkanMesh CreateSuperquadric(float eta1, float eta2, uint32_t slices, uint32_t stacks);
+	void CreateSuperquadric(VulkanMesh& mesh, float eta1, float eta2, uint32_t slices, uint32_t stacks);
 }
 
 #endif

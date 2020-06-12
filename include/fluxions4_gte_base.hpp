@@ -57,6 +57,10 @@ constexpr FxVector3f operator-(FxVector3f a) {
 	return { -a.x, -a.y, -a.z };
 }
 
+constexpr FxVector3f operator-(FxVector3f a, FxVector3f b) {
+	return { b.x - a.x, b.y - a.y, b.z - a.z };
+}
+
 struct FxMatrix4f {
 	float m11 = 1.0f, m21 = 0.0f, m31 = 0.0f, m41 = 0.0f;
 	float m12 = 0.0f, m22 = 1.0f, m32 = 0.0f, m42 = 0.0f;

@@ -1,6 +1,6 @@
 #include <hatchetfish.hpp>
 #include <fluxions4_vulkan_pipeline.hpp>
-#include <fluxions4_vulkan_ubo.hpp>
+#include <fluxions4_vulkan_descriptor_set.hpp>
 #include <fluxions4_vulkan_vertex.hpp>
 
 namespace Fluxions {
@@ -16,77 +16,67 @@ namespace Fluxions {
 	};
 
 
+	bool MakeDescriptorSet(VulkanPipeline& pl, VulkanDescriptorSet& ds) {
+		if (!ds.init(pl.pool(), pl.layout())) return false;
+		return true;
+	}
+
+
 	VulkanPipeline::VulkanPipeline(VulkanContext& vc) :
 		context_(&vc) {}
 
 
 	VulkanPipeline::~VulkanPipeline() {
-
+		kill();
 	}
 
 
 	bool VulkanPipeline::init() {
+		kill();
+
 		_createShaders();
 		_createPipelineLayout();
 		_createGraphicsPipeline();
 		_createDescriptorPool();
-		_createDescriptorSet();
-
-		uint32_t allocationSize = sizeof(struct StandardUbo);
-		ubo_buffer_.init(context_, allocationSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-
-		_createDescriptor(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-		_createDescriptor(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
 		resize(0, 0, context_->width(), context_->height(), 0.0f, 1.0f);
+		flags.set(INIT_FLAG);
 		return true;
 	}
 
 
 	void VulkanPipeline::kill() {
-		ubo_buffer_.kill();
-		vkDestroyPipeline(device(), pipeline_, nullptr);
-		vkDestroyDescriptorSetLayout(device(), descriptorSetLayout_, nullptr);
-		vkDestroyPipelineLayout(device(), pipelineLayout_, nullptr);
-		vkDestroyDescriptorPool(device(), descriptorPool_, nullptr);
-		vkDestroyShaderModule(device(), vsShaderModule_, nullptr);
-		vkDestroyShaderModule(device(), fsShaderModule_, nullptr);
+		if (flags.test(INIT_FLAG)) {
+			vkDestroyDescriptorPool(device(), descriptorPool_, nullptr);
+			vkDestroyPipeline(device(), pipeline_, nullptr);
+			vkDestroyPipelineLayout(device(), pipelineLayout_, nullptr);
+			vkDestroyDescriptorSetLayout(device(), descriptorSetLayout_, nullptr);
+			vkDestroyShaderModule(device(), vsShaderModule_, nullptr);
+			vkDestroyShaderModule(device(), fsShaderModule_, nullptr);
+
+			pipeline_ = nullptr;
+			pipelineLayout_ = nullptr;
+			descriptorPool_ = nullptr;
+			descriptorSetLayout_ = nullptr;
+			vsShaderModule_ = nullptr;
+			fsShaderModule_ = nullptr;
+			flags.reset(INIT_FLAG);
+		}
 	}
 
 
-	void VulkanPipeline::use(float t) {
+	void VulkanPipeline::use(VulkanDescriptorSet& ds) {
 		vkCmdSetViewport(commandBuffer(), 0, 1, &viewport_);
 		vkCmdSetScissor(commandBuffer(), 0, 1, &scissor_);
 
-		struct StandardUbo ubo;
-		ubo.vert.modelview.translate({ 0.0f, 0.0f, -8.0f });
-		ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
-		ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
-		float aspect = (float)context_->width() / (float)context_->height();
-		FxMatrix4f projection;
-		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
-		ubo.vert.modelviewprojection = projection * ubo.vert.modelview;
-		ubo.vert.color.g = 0.5f * sin(t) + 0.5f;
-		memcpy(ubo.vert.normal, &ubo.vert.modelview, sizeof(ubo.vert.normal));
-		ubo_buffer_.copyToMap(0, (void*)&ubo, sizeof(ubo));
+		ds.copyToBuffer();
 
-		//VkBuffer buffers[] = { vbuffer.buffer(), vbuffer.buffer(), vbuffer.buffer() };
-		//VkDeviceSize offsets[] = { vertex_offset_, colors_offset_, normals_offset_ };
-		//vkCmdBindVertexBuffers(commandBuffer(), 0, 3, buffers, offsets);
 		vkCmdBindPipeline(commandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_);
 		vkCmdBindDescriptorSets(commandBuffer(),
 								VK_PIPELINE_BIND_POINT_GRAPHICS,
 								pipelineLayout_,
 								0, 1,
-								&descriptorSet_, 0, nullptr);
-
-		//vkCmdDraw(commandBuffer(), 4, 1, 0, 0);
-		//vkCmdDraw(commandBuffer(), 4, 1, 4, 0);
-		//vkCmdDraw(commandBuffer(), 4, 1, 8, 0);
-		//vkCmdDraw(commandBuffer(), 4, 1, 12, 0);
-		//vkCmdDraw(commandBuffer(), 4, 1, 16, 0);
-		//vkCmdDraw(commandBuffer(), 4, 1, 20, 0);
+								&ds.descriptorSet(), 0, nullptr);
 	}
 
 
@@ -168,7 +158,7 @@ namespace Fluxions {
 			return false;
 		}
 
-		return (descriptorSet_ != nullptr) && (pipelineLayout_ != nullptr);
+		return (descriptorSetLayout_ != nullptr) && (pipelineLayout_ != nullptr);
 	}
 
 
@@ -178,7 +168,7 @@ namespace Fluxions {
 			//PipelineCullMode cullMode;
 			//PipelineDepthMode depthMode;
 			//PipelineBlendMode blendMode;
-			VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+			PipelineTopology::TRIANGLE_STRIP,
 			PipelineCullMode::CULL_MODE_BACK,
 			PipelineDepthMode::DEPTH_LESS,
 			PipelineBlendMode::ALPHA_BLENDING
@@ -219,7 +209,7 @@ namespace Fluxions {
 			//VkBool32                                   primitiveRestartEnable;
 			VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			nullptr, 0,
-			vpci.topology,
+			(VkPrimitiveTopology)vpci.topology,
 			//VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
 			//VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
 			VK_FALSE
@@ -309,7 +299,7 @@ namespace Fluxions {
 			VK_FALSE
 		};
 
-		VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo = {
+		VkPipelineDepthStencilStateCreateInfo pdssci = {
 			//VkStructureType                           sType;
 			//const void*                               pNext;
 			//VkPipelineDepthStencilStateCreateFlags    flags;
@@ -324,19 +314,49 @@ namespace Fluxions {
 			//float                                     maxDepthBounds;
 			VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			nullptr, 0,
-			VK_TRUE,
-			VK_TRUE,
-			VK_COMPARE_OP_LESS,
-			//VK_FALSE,
-			//VK_FALSE,
-			//VK_COMPARE_OP_NEVER,
+			VK_FALSE,
+			VK_FALSE,
+			VK_COMPARE_OP_NEVER,
 			VK_FALSE,
 			VK_FALSE,
 			{ VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_NEVER, 0, 0, 0 },
 			{ VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_STENCIL_OP_KEEP, VK_COMPARE_OP_NEVER, 0, 0, 0 },
 			0.0f,
-			0.0f
+			1.0f
 		};
+
+		switch (vpci.depthMode) {
+		case PipelineDepthMode::DEPTH_LESS:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_TRUE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_LESS;
+			break;
+		case PipelineDepthMode::DEPTH_LEQUAL:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_TRUE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+			break;
+		case PipelineDepthMode::DEPTH_EQUAL:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_TRUE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_EQUAL;
+			break;
+		case PipelineDepthMode::DEPTH_LESS_NO_WRITE:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_FALSE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_LESS;
+			break;
+		case PipelineDepthMode::DEPTH_LEQUAL_NO_WRITE:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_FALSE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+			break;
+		case PipelineDepthMode::DEPTH_EQUAL_NO_WRITE:
+			pdssci.depthTestEnable = VK_TRUE;
+			pdssci.depthWriteEnable = VK_FALSE;
+			pdssci.depthCompareOp = VK_COMPARE_OP_EQUAL;
+			break;
+		}
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentStatus = {
 			//VkBool32                 blendEnable;
@@ -417,7 +437,7 @@ namespace Fluxions {
 			&pipelineViewportStateCreateInfo,
 			&pipelineRasterizationStateCreateInfo,
 			&pipelineMultisampleStateCreateInfo,
-			&pipelineDepthStencilStateCreateInfo,
+			&pdssci,
 			&pipelineColorBlendStateCreateInfo,
 			&pipelineDynamicStateCreateInfo,
 			pipelineLayout_,
@@ -460,63 +480,63 @@ namespace Fluxions {
 	}
 
 
-	bool VulkanPipeline::_createDescriptorSet() {
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
-			//VkStructureType                 sType;
-			//const void*                     pNext;
-			//VkDescriptorPool                descriptorPool;
-			//uint32_t                        descriptorSetCount;
-			//const VkDescriptorSetLayout*    pSetLayouts;
-			VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			nullptr,
-			descriptorPool_,
-			1, &descriptorSetLayout_
-		};
-		if (vkAllocateDescriptorSets(device(), &descriptorSetAllocateInfo, &descriptorSet_) != VK_SUCCESS) {
-			HFLOGERROR("Could not allocate descriptor sets");
-			return false;
-		}
-		return true;
-	}
+	//bool VulkanPipeline::_createDescriptorSet() {
+	//	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
+	//		//VkStructureType                 sType;
+	//		//const void*                     pNext;
+	//		//VkDescriptorPool                descriptorPool;
+	//		//uint32_t                        descriptorSetCount;
+	//		//const VkDescriptorSetLayout*    pSetLayouts;
+	//		VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+	//		nullptr,
+	//		descriptorPool_,
+	//		1, &descriptorSetLayout_
+	//	};
+	//	if (vkAllocateDescriptorSets(device(), &descriptorSetAllocateInfo, &descriptorSet_) != VK_SUCCESS) {
+	//		HFLOGERROR("Could not allocate descriptor sets");
+	//		return false;
+	//	}
+	//	return true;
+	//}
 
 
-	bool VulkanPipeline::_createDescriptor(uint32_t binding, VkDescriptorType type) {
-		//VkBuffer        buffer;
-		//VkDeviceSize    offset;
-		//VkDeviceSize    range;
-		VkDescriptorBufferInfo dbiUbo = { ubo_buffer_.buffer(), 0, sizeof(struct StandardUbo) };
+	//bool VulkanPipeline::_createDescriptor(uint32_t binding, VkDescriptorType type) {
+	//	//VkBuffer        buffer;
+	//	//VkDeviceSize    offset;
+	//	//VkDeviceSize    range;
+	//	VkDescriptorBufferInfo dbiUbo = { ubo_buffer_.buffer(), 0, sizeof(struct StandardUbo) };
 
-		//VkSampler        sampler;
-		//VkImageView      imageView;
-		//VkImageLayout    imageLayout;
-		VkDescriptorImageInfo dbiSampler = { nullptr, nullptr, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+	//	//VkSampler        sampler;
+	//	//VkImageView      imageView;
+	//	//VkImageLayout    imageLayout;
+	//	VkDescriptorImageInfo dbiSampler = { nullptr, nullptr, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
 
-		VkWriteDescriptorSet wds{};
-		//VkStructureType                  sType;
-		//const void*                      pNext;
-		//VkDescriptorSet                  dstSet;
-		//uint32_t                         dstBinding;
-		//uint32_t                         dstArrayElement;
-		//uint32_t                         descriptorCount;
-		//VkDescriptorType                 descriptorType;
-		//const VkDescriptorImageInfo*     pImageInfo;
-		//const VkDescriptorBufferInfo*    pBufferInfo;
-		//const VkBufferView*              pTexelBufferView;
-		wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		wds.dstSet = descriptorSet_;
-		wds.dstBinding = binding;
-		wds.descriptorCount = 1;
-		wds.descriptorType = type;
-		switch (type) {
-		case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-			wds.pBufferInfo = &dbiUbo;
-			break;
-		case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-			wds.pImageInfo = &dbiSampler;
-			return false;
-			break;
-		}
-		vkUpdateDescriptorSets(device(), 1, &wds, 0, nullptr);
-		return true;
-	}
+	//	VkWriteDescriptorSet wds{};
+	//	//VkStructureType                  sType;
+	//	//const void*                      pNext;
+	//	//VkDescriptorSet                  dstSet;
+	//	//uint32_t                         dstBinding;
+	//	//uint32_t                         dstArrayElement;
+	//	//uint32_t                         descriptorCount;
+	//	//VkDescriptorType                 descriptorType;
+	//	//const VkDescriptorImageInfo*     pImageInfo;
+	//	//const VkDescriptorBufferInfo*    pBufferInfo;
+	//	//const VkBufferView*              pTexelBufferView;
+	//	wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	//	wds.dstSet = descriptorSet_;
+	//	wds.dstBinding = binding;
+	//	wds.descriptorCount = 1;
+	//	wds.descriptorType = type;
+	//	switch (type) {
+	//	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+	//		wds.pBufferInfo = &dbiUbo;
+	//		break;
+	//	case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+	//		wds.pImageInfo = &dbiSampler;
+	//		return false;
+	//		break;
+	//	}
+	//	vkUpdateDescriptorSets(device(), 1, &wds, 0, nullptr);
+	//	return true;
+	//}
 }

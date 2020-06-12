@@ -17,9 +17,10 @@ namespace Fluxions {
 
 	class VulkanMesh {
 	public:
-		VulkanMesh();
-		~VulkanMesh();
+		VulkanMesh() {}
+		~VulkanMesh() { kill(); }
 
+		void init();
 		void kill();
 
 		// resizes the host vertex array
@@ -41,19 +42,19 @@ namespace Fluxions {
 		void clearSurfaces();
 
 		// updates the Vulkan context with the new memory
-		void copyToBuffer(VulkanContext& context);
+		void copyToBuffer();
 
 		// draws to Vulkan command buffer
-		void drawToCommandBuffer(VkCommandBuffer commandBuffer);
+		void draw();
 
 	private:
 		std::vector<VulkanVertex> vertices;
 		std::vector<uint32_t> indices;
 		std::vector<VulkanSurface> surfaces;
 
-		static constexpr int VBO_DIRTY_FLAG = 1;
-		static constexpr int IBO_DIRTY_FLAG = 2;
-		static constexpr int INIT_FLAG = 3;
+		static constexpr int INIT_FLAG = 1;
+		static constexpr int VBO_DIRTY_FLAG = 2;
+		static constexpr int IBO_DIRTY_FLAG = 3;
 
 		std::bitset<32> flags;
 		VulkanBuffer vbo;

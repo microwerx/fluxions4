@@ -94,6 +94,10 @@ namespace Fluxions {
 		}
 		swapchainFramebuffers_.clear();
 
+		vkDestroyImageView(device_, depthBufferImageView_, nullptr);		
+		vkDestroyImage(device_, depthBufferImage_, nullptr);
+		vkFreeMemory(device_, depthBufferDeviceMemory_, nullptr);
+
 		vkDestroySemaphore(device_, semaphore_, nullptr);
 		vkDestroyCommandPool(device_, commandPool_, nullptr);
 		vkDestroyRenderPass(device_, renderPass_, nullptr);
@@ -126,15 +130,20 @@ namespace Fluxions {
 		commandBufferBeginInfo.flags = 0;
 		vkBeginCommandBuffer(commandBuffer(), &commandBufferBeginInfo);
 
-		VkRenderPassBeginInfo renderPassBeginInfo = {
-				VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-				nullptr,
-				renderPass(),
-				framebuffer(),
-				{ { 0, 0 }, { width(), height() } },
-				1,
-				clearValues
-		};
+		VkRenderPassBeginInfo renderPassBeginInfo{};
+		//VkStructureType        sType;
+		//const void*            pNext;
+		//VkRenderPass           renderPass;
+		//VkFramebuffer          framebuffer;
+		//VkRect2D               renderArea;
+		//uint32_t               clearValueCount;
+		//const VkClearValue*    pClearValues;
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.renderPass = renderPass();
+		renderPassBeginInfo.framebuffer = framebuffer();
+		renderPassBeginInfo.renderArea = { { 0, 0 }, { width(), height() } };
+		renderPassBeginInfo.clearValueCount = 2;
+		renderPassBeginInfo.pClearValues = clearValues;
 		vkCmdBeginRenderPass(commandBuffer(), &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		return true;
@@ -173,11 +182,11 @@ namespace Fluxions {
 	}
 
 
-	uint32_t VulkanContext::findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const {
+	uint32_t VulkanContext::findMemoryTypeIndex(uint32_t allowedMemoryTypeBits,
+												uint32_t desiredBits) const {
 		for (unsigned i = 0; (1u << i) <= allowedMemoryTypeBits && i <= pdMemoryProperties_.memoryTypeCount; ++i) {
 			if ((allowedMemoryTypeBits & (1u << i)) &&
-				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
-				(pdMemoryProperties_.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+				(pdMemoryProperties_.memoryTypes[i].propertyFlags & desiredBits))
 				return (int)i;
 		}
 		return VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM;
@@ -446,38 +455,66 @@ namespace Fluxions {
 
 
 	bool VulkanContext::_createRenderPass() {
-		VkAttachmentDescription attachmentDescription{};
-		attachmentDescription.format = renderPassImageFormat_;
-		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		VkAttachmentDescription colorAttachmentDesc{};
+		colorAttachmentDesc.format = renderPassImageFormat_;
+		colorAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkAttachmentReference colorAttachment{};
-		colorAttachment.attachment = 0;
-		colorAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentDescription depthAttachmentDesc{};
+		//VkAttachmentDescriptionFlags    flags;
+		//VkFormat                        format;
+		//VkSampleCountFlagBits           samples;
+		//VkAttachmentLoadOp              loadOp;
+		//VkAttachmentStoreOp             storeOp;
+		//VkAttachmentLoadOp              stencilLoadOp;
+		//VkAttachmentStoreOp             stencilStoreOp;
+		//VkImageLayout                   initialLayout;
+		//VkImageLayout                   finalLayout;
+		depthAttachmentDesc.format = depthBufferFormat_;
+		depthAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		VkAttachmentReference resolveAttachment{};
-		resolveAttachment.attachment = VK_ATTACHMENT_UNUSED;
-		resolveAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentReference colorAttachmentRef{};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDescription subpassDescription{};
-		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassDescription.inputAttachmentCount = 0;
-		subpassDescription.colorAttachmentCount = 1;
-		subpassDescription.pColorAttachments = &colorAttachment;
-		subpassDescription.pResolveAttachments = &resolveAttachment;
-		subpassDescription.pDepthStencilAttachment = NULL;
-		subpassDescription.preserveAttachmentCount = 0;
-		subpassDescription.pPreserveAttachments = NULL;
+		VkAttachmentReference depthAttachmentRef{};
+		depthAttachmentRef.attachment = 1;
+		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference resolveAttachmentRef{};
+		resolveAttachmentRef.attachment = VK_ATTACHMENT_UNUSED;
+		resolveAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpassDesc{};
+		subpassDesc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDesc.inputAttachmentCount = 0;
+		subpassDesc.colorAttachmentCount = 1;
+		subpassDesc.pColorAttachments = &colorAttachmentRef;
+		subpassDesc.pResolveAttachments = &resolveAttachmentRef;
+		subpassDesc.pDepthStencilAttachment = &depthAttachmentRef;
+		subpassDesc.preserveAttachmentCount = 0;
+		subpassDesc.pPreserveAttachments = NULL;
+
+		std::array<VkAttachmentDescription, 2> attachmentDescs = {
+			colorAttachmentDesc,
+			depthAttachmentDesc
+		};
 
 		VkRenderPassCreateInfo renderPassCreateInfo{};
 		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassCreateInfo.attachmentCount = 1;
-		renderPassCreateInfo.pAttachments = &attachmentDescription;
+		renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(attachmentDescs.size());
+		renderPassCreateInfo.pAttachments = attachmentDescs.data();
 		renderPassCreateInfo.subpassCount = 1;
-		renderPassCreateInfo.pSubpasses = &subpassDescription;
+		renderPassCreateInfo.pSubpasses = &subpassDesc;
 		renderPassCreateInfo.dependencyCount = 0;
 
 		vkCreateRenderPass(device_, &renderPassCreateInfo, NULL, &renderPass_);
@@ -564,6 +601,63 @@ namespace Fluxions {
 			throw std::runtime_error("swapchain image count exceeds max frames allowed");
 		}
 		swapchainFramebuffers_.resize(swapchainImageCount_);
+
+		// depth buffer
+		{
+			VkImageCreateInfo ici{};
+			ici.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+			ici.imageType = VK_IMAGE_TYPE_2D;
+			ici.extent.width = width_;
+			ici.extent.height = height_;
+			ici.extent.depth = 1;
+			ici.mipLevels = 1;
+			ici.arrayLayers = 1;
+			ici.samples = VK_SAMPLE_COUNT_1_BIT;
+			ici.format = depthBufferFormat_;
+			ici.tiling = VK_IMAGE_TILING_OPTIMAL;
+			ici.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			ici.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			ici.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			if (vkCreateImage(device_, &ici, nullptr, &depthBufferImage_) != VK_SUCCESS) {
+				HFLOGERROR("depth buffer image could not be created");
+			}
+
+			VkMemoryRequirements mr{};
+			vkGetImageMemoryRequirements(device_, depthBufferImage_, &mr);
+
+			VkMemoryAllocateInfo mai{};
+			mai.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			mai.allocationSize = mr.size;
+			mai.memoryTypeIndex = findMemoryTypeIndex(mr.memoryTypeBits,
+													  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+			if (mai.memoryTypeIndex == VK_MEMORY_ALLOCATE_FLAG_BITS_MAX_ENUM) {
+				HFLOGERROR("Could not find memory type index");
+				return false;
+			}
+
+			if (vkAllocateMemory(device_, &mai, nullptr, &depthBufferDeviceMemory_) != VK_SUCCESS) {
+				HFLOGERROR("Could not allocate image memory");
+				return false;
+			}
+
+			vkBindImageMemory(device_, depthBufferImage_, depthBufferDeviceMemory_, 0);
+
+			VkImageViewCreateInfo ivci{};
+			ivci.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			ivci.image = depthBufferImage_;
+			ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			ivci.format = depthBufferFormat_;
+			ivci.subresourceRange = {
+				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+			   .baseMipLevel = 0,
+			   .levelCount = 1,
+			   .baseArrayLayer = 0,
+			   .layerCount = 1
+			};
+			vkCreateImageView(device_, &ivci, NULL, &depthBufferImageView_);
+		}
+
 		for (uint32_t i = 0; i < swapchainImageCount_; i++) {
 			_initImageBuffer(i, swapchainImages_[i]);
 		}
@@ -593,11 +687,16 @@ namespace Fluxions {
 		};
 		vkCreateImageView(device_, &imageViewCreateInfo, NULL, &swapchainFramebuffers_[i].view_);
 
+		std::array<VkImageView, 2> attachments = {
+			swapchainFramebuffers_[i].view_,
+			depthBufferImageView_
+		};
+
 		VkFramebufferCreateInfo framebufferCreateInfo{};
 		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferCreateInfo.renderPass = renderPass_;
-		framebufferCreateInfo.attachmentCount = 1;
-		framebufferCreateInfo.pAttachments = &swapchainFramebuffers_[i].view_;
+		framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		framebufferCreateInfo.pAttachments = attachments.data();
 		framebufferCreateInfo.width = width_;
 		framebufferCreateInfo.height = height_;
 		framebufferCreateInfo.layers = 1;

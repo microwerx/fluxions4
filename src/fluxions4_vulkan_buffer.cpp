@@ -2,19 +2,8 @@
 
 
 namespace Fluxions {
-	VulkanBuffer::VulkanBuffer() {
-
-	}
-
-
-	VulkanBuffer::~VulkanBuffer() {
-
-	}
-
-
-	bool VulkanBuffer::init(VulkanContext* context, VkDeviceSize allocationSize, VkBufferUsageFlags usage) {
-		context_ = context;
-		if (!context_) throw std::runtime_error("VulkanBuffer::init() -> context is NULL");
+	bool VulkanBuffer::init(VkDeviceSize allocationSize, VkBufferUsageFlags usage) {
+		VulkanContext* context = VulkanContext::GetContext();
 
 		if (allocationSize_) {
 			kill();
@@ -42,7 +31,10 @@ namespace Fluxions {
 
 		VkMemoryRequirements memoryRequirements;
 		vkGetBufferMemoryRequirements(context->device(), buffer_, &memoryRequirements);
-		uint32_t memoryTypeIndex = context->findMemoryTypeIndex(memoryRequirements.memoryTypeBits);
+		uint32_t memoryTypeIndex = context->findMemoryTypeIndex(memoryRequirements.memoryTypeBits,
+																VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+																VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+		);
 		if (memoryTypeIndex == VK_MEMORY_PROPERTY_FLAG_BITS_MAX_ENUM) {
 			throw std::runtime_error("memory type bits failed");
 		}
@@ -85,9 +77,9 @@ namespace Fluxions {
 
 	void VulkanBuffer::kill() {
 		if (!memory_ || !buffer_) return;
-		vkUnmapMemory(context_->device(), memory_);
-		vkFreeMemory(context_->device(), memory_, nullptr);
-		vkDestroyBuffer(context_->device(), buffer_, nullptr);
+		vkUnmapMemory(VulkanContext::GetDevice(), memory_);
+		vkFreeMemory(VulkanContext::GetDevice(), memory_, nullptr);
+		vkDestroyBuffer(VulkanContext::GetDevice(), buffer_, nullptr);
 		memory_ = nullptr;
 		buffer_ = nullptr;
 		allocationSize_ = 0;

@@ -1,14 +1,13 @@
 #ifndef FLUXIONS_VULKAN_HPP
 #define FLUXIONS_VULKAN_HPP
 
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <fluxions4_stdcxx.hpp>
 #include <fluxions4_gte_base.hpp>
 extern "C" {
 #include <vulkan/vulkan.h>	
 #include <SDL2/SDL_vulkan.h>
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // INTERFACE ///////////////////////////////////////////////////////////////////
@@ -45,7 +44,7 @@ namespace Fluxions {
 		VkCommandBuffer& commandBuffer() { return swapchainFramebuffers_[frameImageIndex_].commandBuffer_; }
 		VkFramebuffer& framebuffer() { return swapchainFramebuffers_[frameImageIndex_].framebuffer_; }
 
-		uint32_t findMemoryTypeIndex(unsigned allowedMemoryTypeBits) const;
+		uint32_t findMemoryTypeIndex(uint32_t allowedMemoryTypeBits, uint32_t desiredBits) const;
 		VkFormatProperties getFormatProperties(VkFormat format);
 
 		uint32_t majorVersion() const { return VK_VERSION_MAJOR(version_); }
@@ -61,6 +60,14 @@ namespace Fluxions {
 		static VkDevice GetDevice() {
 			if (recentlyUsedContext_)
 				return recentlyUsedContext_->device();
+			return nullptr;
+		}
+
+		// Static member to get device of recently created context
+		// - returns nullptr if device not available
+		static VkCommandBuffer GetCommandBuffer() {
+			if (recentlyUsedContext_)
+				return recentlyUsedContext_->commandBuffer();
 			return nullptr;
 		}
 
@@ -95,6 +102,13 @@ namespace Fluxions {
 		VkRenderPass renderPass_{ nullptr };
 		VkCommandPool commandPool_{ nullptr };
 		VkSemaphore semaphore_{ nullptr };
+
+		VkFormat depthBufferFormat_{ VK_FORMAT_D32_SFLOAT };
+		VkImage depthBufferImage_;
+		VkImageView depthBufferImageView_;
+		VkDeviceMemory depthBufferDeviceMemory_;
+
+		//VulkanImage depthBufferImage;
 
 		struct SwapChainImageBuffer {
 			VkImage image_{ nullptr };
