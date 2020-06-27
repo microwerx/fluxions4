@@ -169,7 +169,7 @@ namespace Fluxions {
 			//PipelineDepthMode depthMode;
 			//PipelineBlendMode blendMode;
 			PipelineTopology::TRIANGLE_STRIP,
-			PipelineCullMode::CULL_MODE_BACK,
+			PipelineCullMode::CULL_MODE_FRONT_AND_BACK,
 			PipelineDepthMode::DEPTH_LESS,
 			PipelineBlendMode::ALPHA_BLENDING
 		};
@@ -260,7 +260,7 @@ namespace Fluxions {
 			VK_POLYGON_MODE_FILL,
 			//VK_POLYGON_MODE_LINE,
 			VK_CULL_MODE_NONE,
-			VK_FRONT_FACE_CLOCKWISE,
+			VK_FRONT_FACE_COUNTER_CLOCKWISE,
 			VK_FALSE,
 			0.0f,
 			0.0f,

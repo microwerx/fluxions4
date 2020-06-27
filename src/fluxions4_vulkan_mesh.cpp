@@ -51,6 +51,8 @@ namespace Fluxions {
 
 
 	void VulkanMesh::drawSurface(VulkanSurface surface) {
+		flags.set(VBO_DIRTY_FLAG);
+		flags.set(IBO_DIRTY_FLAG);
 		surfaces.push_back(surface);
 	}
 

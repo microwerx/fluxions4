@@ -51,13 +51,22 @@ namespace Fluxions {
 			{ 4, 1, 20, 0 },	// bottom
 		};
 
-		std::vector<uint32_t> cubeIndices{
+		std::vector<uint32_t> cubeIndicesClockwise{
 			0, 1, 2, 3,
 			4, 5, 6, 7,
 			8, 9, 10, 11,
 			12, 13, 14, 15,
 			16, 17, 18, 19,
 			20, 21, 22, 23
+		};
+
+		std::vector<uint32_t> cubeIndicesCounterClockwise{
+			 1,  0,  3,  2,  2,  5,
+			 5,  4,  7,  6,  6,  9,
+			 9,  8, 11, 10, 10, 13,
+			13, 12, 15, 14, 14, 17,
+			17, 16, 19, 18, 18, 21,
+			21, 20, 23, 22
 		};
 
 		const float vVertices[] = {
@@ -163,10 +172,9 @@ namespace Fluxions {
 	void CreateCube(VulkanMesh& mesh) {
 		mesh.init();
 
-		mesh.resizeVertices(24);
-		mesh.updateVertexData(&cubeVertices[0], 0, cubeVertices.size());
-		mesh.resizeIndices(cubeIndices.size());
-		mesh.updateIndexData(&cubeIndices[0], 0, cubeIndices.size());
+		mesh.vertices = cubeVertices;
+		mesh.indices = cubeIndicesCounterClockwise;
+		mesh.drawSurface({ (uint32_t)cubeIndicesCounterClockwise.size(), 1, 0, 0 });
 
 		for (auto& s : cubeSurfaces) {
 			mesh.drawSurface(s);

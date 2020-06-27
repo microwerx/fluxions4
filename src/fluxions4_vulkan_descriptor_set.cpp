@@ -29,9 +29,11 @@ namespace Fluxions {
 
 		ubo.vert.modelview.loadIdentity();
 		ubo.vert.modelview.translate({ x, 0.0f, -8.0f });
-		ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
-		ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		ubo.vert.modelview.rotate(0.25f * t, { 0.0f, 1.0f, 0.0f });
+		ubo.vert.modelview.rotate(75.0f, { 1.0f, 0.0f, 0.0f });
+		//ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		//ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
+		//ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
 		float aspect = (float)context->width() / (float)context->height();
 		FxMatrix4f projection;
 		projection.perspective(45.0f, aspect, 0.1f, 100.0f);

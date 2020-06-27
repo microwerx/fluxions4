@@ -7,6 +7,7 @@
 
 namespace Fluxions {
 	void CreateSuperquadric(VulkanMesh& mesh, float eta1, float eta2, uint32_t slices, uint32_t stacks);
+	void CreateSuperquadricToroid(VulkanMesh& mesh, float eta1, float eta2, float alpha, uint32_t slices, uint32_t stacks);
 }
 
 #endif

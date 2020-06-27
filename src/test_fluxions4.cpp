@@ -70,7 +70,9 @@ public:
 				}
 			}
 
-			Fluxions::CreateSuperquadric(sq, 2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(1.05f * t1), 56, 28);
+			const uint32_t slices = 50;
+			const uint32_t stacks = 50;
+			Fluxions::CreateSuperquadric(sq, 2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(1.05f * t1), slices, stacks);
 
 			sqDS.useDELETEME(t1 * 30.0f, -2.0f);
 			cubeDS.useDELETEME(t1 * 25.0f, 2.0f);
