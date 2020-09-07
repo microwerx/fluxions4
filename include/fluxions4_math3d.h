@@ -1,5 +1,47 @@
-#ifndef FLUXIONS_GTE_BASE_HPP
-#define FLUXIONS_GTE_BASE_HPP
+// FLUXIONS4 GTE MATH C LIBRARY
+// ============================
+// Copyright (C) 2020 Jonathan Metzgar
+//
+// ABSTRACT
+// --------
+// This is a C library--a header only library with the most useful
+// math routines for the Fluxions4 graphics engine and my book.
+//
+// DESCRIPTION
+// -----------
+// The following structures are defined in this header
+// - `vec4` 4-component XYZW
+// - `col4` 4-component RGBA
+// - `mat4` 4x4 colummn major matrix
+//
+// The following functions are common to all the above vector space types
+// - `vectype_zero()` constructs a ZERO vector (V*0 = 0)
+// - `vectype_identity()` constructs an IDENTITY vector (V*I = V)
+// - `vectype_eq(A, B)` compares two matrices together and returns 0 if not equal, 1 if equal
+// - `vectype_neq(A, B)` compares two matrices and returns 0 if equal, 1 if not equal
+// - `vectype_mult(A, B)` returns product of two matrices
+// - `vectype_add(A, B)` returns sum of two matrices
+// - `vectype_sub(A, B)` returns difference of two matrices
+// - `vectype_negate(A)` returns additive inverse of matrix
+// - `vectype_scale(c, A)` returns scalar multiplication of c and V
+//
+// The following functions are defined in this header
+// - `dot(a, b)` returns a scalar dot product of two vectors
+// - `cross(a, b)` returns a cross product of two vectors (W is set to 0)
+// - `make_mat4(m11, m12, ...)` constructs a matrix with arguments in row major order
+// - `mat4_zero()` constructs a ZERO matrix
+// - `mat4_identity()` constructs an IDENTITY matrix
+// - `mat4_eq(A, B)` compares two matrices together and returns 0 if not equal, 1 if equal
+// - `mat4_neq(A, B)` compares two matrices and returns 0 if equal, 1 if not equal
+// - `mat4_mult(A, B)` returns product of two matrices
+// - `mat4_add(A, B)` returns sum of two matrices
+// - `mat4_sub(A, B)` returns difference of two matrices
+// - `mat4_negate(M)` returns additive inverse of matrix
+// - `mat4_inverse(M)` returns inverse of matrix
+// - `mat4_transpose(M)` return transpose of matrix
+
+#ifndef FLUXIONS4_GTE_MATH3D_H
+#define FLUXIONS4_GTE_MATH3D_H
 
 
 #include <math.h>

@@ -3,6 +3,7 @@
 #include <fluxions4_vulkan_descriptor_set.hpp>
 #include <fluxions4_vulkan_vertex.hpp>
 
+
 namespace Fluxions {
 	// Temporary structs we will replace with our own later...
 

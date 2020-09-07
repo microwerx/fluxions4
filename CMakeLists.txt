@@ -11,6 +11,8 @@ endif()
 
 add_subdirectory(hatchetfish)
 include_directories(hatchetfish/include)
+add_subdirectory(fluxions-gte)
+include_directories(fluxions-gte/include)
 
 include_directories(imgui/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -40,3 +42,4 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} SDL2)
 target_link_libraries(${PROJECT_NAME} hatchetfish)
+target_link_libraries(${PROJECT_NAME} fluxions-gte)

@@ -1,5 +1,5 @@
-#ifndef FLUXIONS_GTE_BASE_HPP
-#define FLUXIONS_GTE_BASE_HPP
+#ifndef FLUXIONS4_GTE_BASE_HPP
+#define FLUXIONS4_GTE_BASE_HPP
 
 
 #include <cmath>
