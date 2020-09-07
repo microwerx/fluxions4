@@ -1,8 +1,10 @@
 #ifndef FLUXIONS_GTE_BASE_HPP
 #define FLUXIONS_GTE_BASE_HPP
 
+
 #include <cmath>
 #include <algorithm>
+
 
 struct FxColor4f {
 	float r = 0.0f;
@@ -12,7 +14,7 @@ struct FxColor4f {
 	FxColor4f(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f) :r(r), g(g), b(b), a(a) {}
 };
 
-inline FxColor4f saturate(FxColor4f color) {
+static inline FxColor4f saturate(FxColor4f color) {
 	return {
 		std::clamp(color.r, 0.0f, 1.0f),
 		std::clamp(color.g, 0.0f, 1.0f),
@@ -20,32 +22,50 @@ inline FxColor4f saturate(FxColor4f color) {
 		std::clamp(color.a, 0.0f, 1.0f) };
 }
 
+
+////////////////////////////////////////////////////////////
+// VECTORS /////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+
+
 struct FxVector3f {
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
 };
 
-inline float length(FxVector3f v) {
+
+static inline struct FxVector3f
+vec3_make(float x, float y, float z) {
+	struct FxVector3f v { x, y, z };
+	return v;
+}
+
+
+static inline float length(FxVector3f v) {
 	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-inline FxVector3f normalize(FxVector3f v) {
+
+static inline FxVector3f normalize(FxVector3f v) {
 	float mag = length(v);
 	if (mag == 0.0f) return { 0.0f, 0.0f, 0.0f };
 	mag = 1.0f / mag;
 	return { v.x * mag,v.y * mag,v.z * mag };
 }
 
-inline FxVector3f standardize(FxVector3f v) {
+
+static inline FxVector3f standardize(FxVector3f v) {
 	return { v.x * 0.5f + 0.5f, v.y * 0.5f + 0.5f, v.z * 0.5f + 0.5f };
 }
 
-inline float dot(FxVector3f a, FxVector3f b) {
+
+static inline float dot(FxVector3f a, FxVector3f b) {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-inline FxVector3f cross(FxVector3f a, FxVector3f b) {
+
+static inline FxVector3f cross(FxVector3f a, FxVector3f b) {
 	return {
 		a.y * b.z - a.z * b.y,
 		a.z * b.x - a.x * b.z,
@@ -53,13 +73,22 @@ inline FxVector3f cross(FxVector3f a, FxVector3f b) {
 	};
 }
 
+
+static inline struct FxVector3f
+vadd(struct FxVector3f a, struct FxVector3f b) {
+	return vec3_make(a.x+b.x, a.y+b.y, a.z+b.z);
+}
+
+
 constexpr FxVector3f operator-(FxVector3f a) {
 	return { -a.x, -a.y, -a.z };
 }
 
+
 constexpr FxVector3f operator-(FxVector3f a, FxVector3f b) {
 	return { b.x - a.x, b.y - a.y, b.z - a.z };
 }
+
 
 constexpr FxVector3f& operator*=(FxVector3f& a, FxVector3f& b) {
 	a.x *= b.x;
