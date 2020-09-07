@@ -1,3 +1,6 @@
 [submodule "hatchetfish"]
 	path = hatchetfish
 	url = https://github.com/microwerx/hatchetfish
+[submodule "imgui"]
+	path = imgui
+	url = https://github.com/ocornut/imgui
