@@ -34,6 +34,11 @@ The main `Vulkan` classes are organized as follows:
 
 The `init` function initializes the object and the `kill` function frees resources used by the object. An object that has already been initialized will be `kill`ed and reinitialized. The destructor will call the `kill` function. Factory functions starting with `Make`... will create commonly used objects.
 
+Build
+-----
+
+Run `make` in the `src/` folder to rebuild the SPIR-V source code. Use `cmake .. && make` in the `build/` folder.
+
 Sample Use
 ----------
 
