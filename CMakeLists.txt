@@ -7,17 +7,21 @@ set(CMAKE_CXX_STANDARD 17)
 if (APPLE)
    include_directories(/usr/local/include)
    link_directories(/usr/local/lib)
-#   set(STD_CXX_FS c++fs)
 endif()
 
 add_subdirectory(hatchetfish)
 include_directories(hatchetfish/include)
 
+include_directories(imgui/include)
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/../imgui/)
 
 find_package(SDL2 REQUIRED)
 find_package(Vulkan REQUIRED)
+
+execute_process(
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+  COMMAND make rebuild
+)
 
 add_executable(${PROJECT_NAME}
     src/fluxions4_simple_shapes.cpp
