@@ -1,0 +1,3 @@
+[submodule "hatchetfish"]
+	path = hatchetfish
+	url = https://github.com/microwerx/hatchetfish

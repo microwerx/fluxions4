@@ -9,6 +9,10 @@ if (APPLE)
    link_directories(/usr/local/lib)
 #   set(STD_CXX_FS c++fs)
 endif()
+
+add_subdirectory(hatchetfish)
+include_directories(hatchetfish/include)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/../imgui/)
 
@@ -25,10 +29,10 @@ add_executable(${PROJECT_NAME}
     src/fluxions4_vulkan_vertex.cpp
     src/fluxions4_vulkan_buffer.cpp
     src/fluxions4_vulkan_mesh.cpp
-    src/hatchetfish_log.cpp
     src/fluxions4_vulkan_context.cpp
     src/fluxions4_vulkan_pipeline.cpp
-    src/hatchetfish_stopwatch.cpp)
+    )
 
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} SDL2)
+target_link_libraries(${PROJECT_NAME} hatchetfish)
