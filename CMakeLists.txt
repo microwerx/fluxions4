@@ -14,7 +14,7 @@ include_directories(hatchetfish/include)
 add_subdirectory(fluxions-gte)
 include_directories(fluxions-gte/include)
 
-include_directories(imgui/include)
+include_directories(imgui)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 find_package(SDL2 REQUIRED)
@@ -37,6 +37,13 @@ add_executable(${PROJECT_NAME}
     src/fluxions4_vulkan_mesh.cpp
     src/fluxions4_vulkan_context.cpp
     src/fluxions4_vulkan_pipeline.cpp
+    src/imgui_main.cpp
+    src/imgui_impl_sdl.cpp
+    src/imgui_impl_vulkan.cpp
+    imgui/imgui.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_widgets.cpp
+    imgui/imgui_demo.cpp
     )
 
 target_link_libraries(${PROJECT_NAME} Vulkan::Vulkan)

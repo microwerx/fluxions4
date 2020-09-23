@@ -33,6 +33,8 @@ namespace Fluxions {
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
 			HFLOGERROR("%s", pCallbackData->pMessage);
 			break;
+        default:
+            break;
 		}
 
 		return VK_FALSE;

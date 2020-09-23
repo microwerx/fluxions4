@@ -107,6 +107,8 @@ namespace Fluxions {
 			wds.pImageInfo = &dbiSampler;
 			return false;
 			break;
+        default:
+            break;
 		}
 		vkUpdateDescriptorSets(VulkanContext::GetDevice(), 1, &wds, 0, nullptr);
 		return true;

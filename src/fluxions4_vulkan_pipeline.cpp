@@ -278,6 +278,8 @@ namespace Fluxions {
 		case PipelineCullMode::CULL_MODE_FRONT:
 			pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
 			break;
+        default:
+            break;
 		}
 
 		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = {
@@ -357,6 +359,8 @@ namespace Fluxions {
 			pdssci.depthWriteEnable = VK_FALSE;
 			pdssci.depthCompareOp = VK_COMPARE_OP_EQUAL;
 			break;
+        default:
+            break;
 		}
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentStatus = {
