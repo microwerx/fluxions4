@@ -107,7 +107,7 @@ private:
 int test_imgui_main(int, char**);
 
 int main(int argc, char** argv) {
-    test_imgui_main(argc, argv);
+    //test_imgui_main(argc, argv);
 	TestApp ta;
 	try {
 		if (ta.init()) {
