@@ -10,6 +10,7 @@
 #include <fluxions4_superquadrics.hpp>
 
 #pragma comment(lib, "vulkan-1.lib")
+#pragma comment(lib, "hatchetfish.lib")
 
 class TestApp {
 public:
