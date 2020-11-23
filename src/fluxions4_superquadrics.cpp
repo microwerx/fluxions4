@@ -28,9 +28,9 @@ namespace Fluxions {
 
 	FxVector3f sqT(float n, float w, float alpha, float theta, float phi) {
 		FxVector3f v;
-		v.x = 1.0 / alpha * (alpha + spcos(phi, n)) * spcos(theta, w);
-		v.y = 1.0 / alpha * (alpha + spcos(phi, n)) * spsin(theta, w);
-		v.z = 1.0 / alpha * spsin(phi, n);
+		v.x = 1.0f / alpha * (alpha + spcos(phi, n)) * spcos(theta, w);
+		v.y = 1.0f / alpha * (alpha + spcos(phi, n)) * spsin(theta, w);
+		v.z = 1.0f / alpha * spsin(phi, n);
 		return v;
 	}
 
