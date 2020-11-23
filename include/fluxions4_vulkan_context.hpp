@@ -38,6 +38,7 @@ namespace Fluxions {
 		VkSemaphore semaphore() { return semaphore_; }
 		uint32_t width() const { return width_; }
 		uint32_t height() const { return height_; }
+		float aspectRatio() const { return (float)width_ / (float)height_; }
 		uint32_t maxSets() const { return static_cast<uint32_t>(swapchainFramebuffers_.size()); }
 
 		VkFence& fence() { return swapchainFramebuffers_[frameImageIndex_].fence_; }
