@@ -349,7 +349,7 @@ namespace Fluxions {
 			for (uint32_t j = 0; j < pdMemoryProperties_.memoryHeapCount; j++) {
 				auto f = pdMemoryProperties_.memoryHeaps[j].flags;
 				if (!f) continue;
-				HFLOGINFO("memory heap size:       %zu", pdMemoryProperties_.memoryHeaps[j].size);
+				HFLOGINFO("memory heap size:       %zu MB", pdMemoryProperties_.memoryHeaps[j].size/1048576);
 				if (f & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) HFLOGINFO("memory heap properties: Device local");
 				if (f & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT) HFLOGINFO("memory heap properties: Multiple instance");
 			}
