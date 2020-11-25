@@ -7,6 +7,8 @@
 
 namespace Fluxions {
 	struct VertShaderUbo {
+		FxMatrix4f model;
+		FxMatrix4f view;
 		FxMatrix4f modelview;
 		FxMatrix4f modelviewprojection;
 		float normal[12];

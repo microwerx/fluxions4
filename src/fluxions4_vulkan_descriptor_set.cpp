@@ -27,19 +27,20 @@ namespace Fluxions {
 	void VulkanDescriptorSet::useDELETEME(float t, float x) {
 		VulkanContext* context = VulkanContext::GetContext();
 
-		ubo.vert.modelview.loadIdentity();
-		ubo.vert.modelview.translate({ x, 0.0f, -8.0f });
-		ubo.vert.modelview.rotate(0.25f * t, { 0.0f, 1.0f, 0.0f });
-		ubo.vert.modelview.rotate(75.0f, { 1.0f, 0.0f, 0.0f });
+		ubo.vert.view.loadIdentity();
+		ubo.vert.view.translate({ x, 0.0f, -8.0f });
+		ubo.vert.model.loadIdentity();
+		ubo.vert.model.rotate(0.25f * t, { 0.0f, 1.0f, 0.0f });
+		ubo.vert.model.rotate(75.0f, { 1.0f, 0.0f, 0.0f });
+		ubo.vert.modelview = ubo.vert.view * ubo.vert.model;
 		//ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
 		//ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
 		//ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
-		float aspect = (float)context->width() / (float)context->height();
 		FxMatrix4f projection;
-		projection.perspective(45.0f, aspect, 0.1f, 100.0f);
+		projection.perspective(45.0f, context->aspectRatio(), 0.1f, 100.0f);
 		ubo.vert.modelviewprojection = projection * ubo.vert.modelview;
 		ubo.vert.color.g = 0.5f * sin(t) + 0.5f;
-		memcpy(ubo.vert.normal, &ubo.vert.modelview, sizeof(ubo.vert.normal));
+		memcpy(ubo.vert.normal, &ubo.vert.model, sizeof(ubo.vert.normal));
 		flags.set(UBO_DIRTY_FLAG);
 	}
 
