@@ -2,6 +2,7 @@
 #define FLUXIONS_VULKAN_CONFIG_HPP
 
 #include <array>
+#include <fluxions4.hpp>
 #include <fluxions4_vulkan_context.hpp>
 #include <fluxions4_vulkan_buffer.hpp>
 #include <fluxions4_vulkan_descriptor_set.hpp>
@@ -97,14 +98,6 @@ namespace Fluxions {
 		VkPipeline pipeline_{ nullptr };
 
 		VkDescriptorSetLayout descriptorSetLayout_{ nullptr };
-		static constexpr uint32_t MaxBindings = 2;
-		//std::array<VkDescriptorSetLayout, MaxBindings> descriptorSetLayouts_;
-
-		//VkDescriptorSet descriptorSet_{ nullptr };
-		////static constexpr uint32_t MaxDescriptorSets = 2;
-		////std::array<VkDescriptorSet, MaxDescriptorSets> descriptorSets_{};
-
-		//VulkanBuffer ubo_buffer_;
 
 		bool _createShaders();
 		bool _createPipelineLayout();

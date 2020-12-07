@@ -75,22 +75,48 @@ public:
 			const uint32_t stacks = 50;
 			Fluxions::CreateSuperquadric(sq, 2.0f + 2.0f * sin(t1), 2.0f + 2.0f * cos(1.05f * t1), slices, stacks);
 
-			sqDS.useDELETEME(t1 * 30.0f, -2.0f);
-			cubeDS.useDELETEME(t1 * 25.0f, 2.0f);
+			update(t1);
 
 			vkcontext.setClearColor({ std::sin(t1), 0.3f, 0.4f, 1.0f });
 			vkcontext.beginFrame();
 
-			vkpipeline.use(cubeDS);
-			cube.draw();
+			if (cubeDS) {
+				vkpipeline.use(cubeDS);
+				cube.draw();
+			}
 
-			vkpipeline.use(sqDS);
-			sq.draw();
+			if (sqDS) {
+				vkpipeline.use(sqDS);
+				sq.draw();
+			}
 
 			vkpipeline.restore();
 
 			vkcontext.presentFrame();
 		}
+	}
+
+	void update(double timestamp) {
+		updateObject(sqDS, timestamp * 30.0f, -2.0f);
+		updateObject(cubeDS, timestamp * 25.0f, 2.0f);
+	}
+
+	void updateObject(Fluxions::VulkanDescriptorSet& DS, float t, float x) {
+		DS.ubo.vert.view.loadIdentity();
+		DS.ubo.vert.view.translate({ x, 0.0f, -8.0f });
+		DS.ubo.vert.model.loadIdentity();
+		DS.ubo.vert.model.rotate(0.25f * t, { 0.0f, 1.0f, 0.0f });
+		DS.ubo.vert.model.rotate(75.0f, { 1.0f, 0.0f, 0.0f });
+		DS.ubo.vert.modelview = DS.ubo.vert.view * DS.ubo.vert.model;
+		//ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
+		//ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
+		//ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
+		FxMatrix4f projection;
+		projection.perspective(45.0f, vkcontext.aspectRatio(), 0.1f, 100.0f);
+		DS.ubo.vert.modelviewprojection = projection * DS.ubo.vert.modelview;
+		DS.ubo.vert.color.g = 0.5f * sin(t) + 0.5f;
+		memcpy(DS.ubo.vert.normal, &DS.ubo.vert.model, sizeof(DS.ubo.vert.normal));
+		DS.update();
 	}
 
 private:

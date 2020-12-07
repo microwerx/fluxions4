@@ -2,6 +2,7 @@
 #include <fluxions4_vulkan_pipeline.hpp>
 #include <fluxions4_vulkan_descriptor_set.hpp>
 #include <fluxions4_vulkan_vertex.hpp>
+#include <fluxions4.hpp>
 
 
 namespace Fluxions {
@@ -13,12 +14,13 @@ namespace Fluxions {
 
 	static uint32_t fs_spirv_source[] = {
 		#include "vkcube.frag.spv.h.in"
-#include <hatchetfish.hpp>
 	};
 
 
 	bool MakeDescriptorSet(VulkanPipeline& pl, VulkanDescriptorSet& ds) {
-		if (!ds.init(pl.pool(), pl.layout())) return false;
+		if (!ds.init(pl.pool(), pl.layout())) {
+			return false;
+		}
 		return true;
 	}
 
@@ -119,14 +121,15 @@ namespace Fluxions {
 
 
 	bool VulkanPipeline::_createPipelineLayout() {
-		std::array<VkDescriptorSetLayoutBinding, MaxBindings> dslbs;
+		VkDescriptorSetLayoutBinding dslbs[FX4_NUM_DESCRIPTOR_BINDINGS]{};
 		//uint32_t              binding;
 		//VkDescriptorType      descriptorType;
 		//uint32_t              descriptorCount;
 		//VkShaderStageFlags    stageFlags;
 		//const VkSampler*      pImmutableSamplers;
-		dslbs[0] = { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_VERTEX_BIT, nullptr };
-		dslbs[1] = { 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
+		dslbs[0] = { FX4_VERT_UBLOCK_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_VERTEX_BIT, nullptr };
+		dslbs[1] = { FX4_FRAG_UBLOCK_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,         1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
+		dslbs[2] = { FX4_FRAG_MAP_KD_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr };
 
 		VkDescriptorSetLayoutCreateInfo dslci{};
 		//VkStructureType                        sType;
@@ -135,12 +138,24 @@ namespace Fluxions {
 		//uint32_t                               bindingCount;
 		//const VkDescriptorSetLayoutBinding*    pBindings;
 		dslci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		dslci.bindingCount = MaxBindings;
-		dslci.pBindings = dslbs.data();
+		dslci.bindingCount = FX4_NUM_DESCRIPTOR_BINDINGS;
+		dslci.pBindings = dslbs;
 		if (vkCreateDescriptorSetLayout(device(), &dslci, nullptr, &descriptorSetLayout_) != VK_SUCCESS) {
 			HFLOGERROR("Could not create descriptor set layout");
 			return false;
 		}
+
+		// Push Constants
+		VkPushConstantRange pcr[FX4_NUM_PUSH_CONSTANTS]{};
+		//VkShaderStageFlags    stageFlags;
+		//uint32_t              offset;
+		//uint32_t              size;
+		pcr[FX4_VERT_PUSH_CONSTANTS_BINDING].stageFlags = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+		pcr[FX4_VERT_PUSH_CONSTANTS_BINDING].offset = FX4_VERT_PUSH_CONSTANTS_OFFSET;
+		pcr[FX4_VERT_PUSH_CONSTANTS_BINDING].size = FX4_VERT_PUSH_CONSTANTS_SIZE;
+		pcr[FX4_FRAG_PUSH_CONSTANTS_BINDING].stageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		pcr[FX4_FRAG_PUSH_CONSTANTS_BINDING].offset = FX4_FRAG_PUSH_CONSTANTS_OFFSET;
+		pcr[FX4_FRAG_PUSH_CONSTANTS_BINDING].size = FX4_FRAG_PUSH_CONSTANTS_SIZE;
 
 		VkPipelineLayoutCreateInfo plci{};
 		//VkStructureType                 sType;
@@ -153,6 +168,8 @@ namespace Fluxions {
 		plci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		plci.setLayoutCount = 1;
 		plci.pSetLayouts = &descriptorSetLayout_;
+		plci.pushConstantRangeCount = FX4_NUM_PUSH_CONSTANTS;
+		plci.pPushConstantRanges = pcr;
 
 		if (vkCreatePipelineLayout(device(), &plci, nullptr, &pipelineLayout_) != VK_SUCCESS) {
 			HFLOGERROR("Could not create pipeline layout");
@@ -278,8 +295,8 @@ namespace Fluxions {
 		case PipelineCullMode::CULL_MODE_FRONT:
 			pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
 			break;
-        default:
-            break;
+		default:
+			break;
 		}
 
 		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = {
@@ -359,8 +376,8 @@ namespace Fluxions {
 			pdssci.depthWriteEnable = VK_FALSE;
 			pdssci.depthCompareOp = VK_COMPARE_OP_EQUAL;
 			break;
-        default:
-            break;
+		default:
+			break;
 		}
 
 		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentStatus = {
@@ -458,25 +475,28 @@ namespace Fluxions {
 
 
 	bool VulkanPipeline::_createDescriptorPool() {
+		constexpr unsigned FX4_NUM_DESCRIPTOR_SETS = 16;
+		constexpr unsigned FX4_NUM_UBO_DESCRIPTORS = 16;
+		constexpr unsigned FX4_NUM_IMG_DESCRIPTORS = 16;
+
 		std::array<VkDescriptorPoolSize, 2> dps;
 		//VkDescriptorType    type;
 		//uint32_t            descriptorCount;
-		dps[0] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, context_->maxSets() };
-		dps[1] = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, context_->maxSets() };
+		dps[0] = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, FX4_NUM_UBO_DESCRIPTORS };
+		dps[1] = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, FX4_NUM_IMG_DESCRIPTORS };
 
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {
-			//VkStructureType                sType;
-			//const void*                    pNext;
-			//VkDescriptorPoolCreateFlags    flags;
-			//uint32_t                       maxSets;
-			//uint32_t                       poolSizeCount;
-			//const VkDescriptorPoolSize*    pPoolSizes;
-			VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			nullptr, 0,
-			context_->maxSets(),
-			(uint32_t)dps.size(), dps.data()
-		};
-		if (vkCreateDescriptorPool(device(), &descriptorPoolCreateInfo, NULL, &descriptorPool_) != VK_SUCCESS) {
+		VkDescriptorPoolCreateInfo dpci{};
+		//VkStructureType                sType;
+		//const void*                    pNext;
+		//VkDescriptorPoolCreateFlags    flags;
+		//uint32_t                       maxSets;
+		//uint32_t                       poolSizeCount;
+		//const VkDescriptorPoolSize*    pPoolSizes;
+		dpci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		dpci.maxSets = FX4_NUM_DESCRIPTOR_SETS;
+		dpci.poolSizeCount = (uint32_t)dps.size();
+		dpci.pPoolSizes = dps.data();
+		if (vkCreateDescriptorPool(device(), &dpci, NULL, &descriptorPool_) != VK_SUCCESS) {
 			HFLOGERROR("Could not create descriptor pool");
 			return false;
 		}
@@ -495,7 +515,7 @@ namespace Fluxions {
 	//		VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 	//		nullptr,
 	//		descriptorPool_,
-	//		1, &descriptorSetLayout_
+	//		1, &descriptorSetLayouts_
 	//	};
 	//	if (vkAllocateDescriptorSets(device(), &descriptorSetAllocateInfo, &descriptorSet_) != VK_SUCCESS) {
 	//		HFLOGERROR("Could not allocate descriptor sets");

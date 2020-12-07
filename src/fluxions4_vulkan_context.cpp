@@ -166,7 +166,7 @@ namespace Fluxions {
 		submitInfo.pCommandBuffers = &commandBuffer();
 		vkQueueSubmit(queue_, 1, &submitInfo, fence());
 
-		VkResult result;
+		VkResult result{};
 		VkSwapchainKHR swapchains[] = { swapchain_ };
 		uint32_t imageIndices[] = { frameImageIndex_ };
 		VkPresentInfoKHR presentInfo{};
@@ -650,13 +650,11 @@ namespace Fluxions {
 			ivci.image = depthBufferImage_;
 			ivci.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			ivci.format = depthBufferFormat_;
-			ivci.subresourceRange = {
-				.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-			   .baseMipLevel = 0,
-			   .levelCount = 1,
-			   .baseArrayLayer = 0,
-			   .layerCount = 1
-			};
+			ivci.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			ivci.subresourceRange.baseMipLevel = 0;
+			ivci.subresourceRange.levelCount = 1;
+			ivci.subresourceRange.baseArrayLayer = 0;
+			ivci.subresourceRange.layerCount = 1;
 			vkCreateImageView(device_, &ivci, NULL, &depthBufferImageView_);
 		}
 
@@ -674,19 +672,15 @@ namespace Fluxions {
 		imageViewCreateInfo.image = image;
 		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		imageViewCreateInfo.format = renderPassImageFormat_;
-		imageViewCreateInfo.components = {
-		   .r = VK_COMPONENT_SWIZZLE_R,
-		   .g = VK_COMPONENT_SWIZZLE_G,
-		   .b = VK_COMPONENT_SWIZZLE_B,
-		   .a = VK_COMPONENT_SWIZZLE_A,
-		};
-		imageViewCreateInfo.subresourceRange = {
-		   .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		   .baseMipLevel = 0,
-		   .levelCount = 1,
-		   .baseArrayLayer = 0,
-		   .layerCount = 1,
-		};
+		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+		imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+		imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+		imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
 		vkCreateImageView(device_, &imageViewCreateInfo, NULL, &swapchainFramebuffers_[i].view_);
 
 		std::array<VkImageView, 2> attachments = {

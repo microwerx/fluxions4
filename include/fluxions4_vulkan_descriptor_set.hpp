@@ -31,10 +31,13 @@ namespace Fluxions {
 		VulkanDescriptorSet() {}
 		~VulkanDescriptorSet() { kill(); }
 
+		operator bool() const { return descriptorSet_ != nullptr; }
+
 		bool init(VkDescriptorPool pool, VkDescriptorSetLayout layout);
 		void kill();
-		
-		void useDELETEME(float t, float x);
+
+		// update() causes the buffer to be updated before the next render
+		void update();
 		void copyToBuffer();
 
 		VkDescriptorSet& descriptorSet() { return descriptorSet_; }
@@ -50,7 +53,7 @@ namespace Fluxions {
 
 		VkDescriptorPool pool_{};
 
-		bool _createDescriptorSet(VkDescriptorPool pool, VkDescriptorSetLayout layout);
+		bool _createDescriptorSet(VkDescriptorPool pool, const VkDescriptorSetLayout layout);
 		bool _createDescriptor(uint32_t binding, VkDescriptorType type);
 	};
 }

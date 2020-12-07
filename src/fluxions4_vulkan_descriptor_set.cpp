@@ -1,18 +1,21 @@
-#include <fluxions4_vulkan_descriptor_set.hpp>
 #include <hatchetfish.hpp>
+#include <fluxions4.hpp>
+#include <fluxions4_vulkan_descriptor_set.hpp>
 
 
 namespace Fluxions {
 	bool VulkanDescriptorSet::init(VkDescriptorPool pool, VkDescriptorSetLayout layout) {
 		pool_ = pool;
 
-		_createDescriptorSet(pool, layout);
+		if (!_createDescriptorSet(pool, layout))
+			return false;
 
 		uint32_t allocationSize = sizeof(struct StandardUbo);
 		ubo_buffer_.init(allocationSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 
-		_createDescriptor(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-		_createDescriptor(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		_createDescriptor(FX4_VERT_UBLOCK_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		_createDescriptor(FX4_FRAG_UBLOCK_BINDING, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		_createDescriptor(FX4_FRAG_MAP_KD_BINDING, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
 		return true;
 	}
@@ -24,23 +27,7 @@ namespace Fluxions {
 	}
 
 
-	void VulkanDescriptorSet::useDELETEME(float t, float x) {
-		VulkanContext* context = VulkanContext::GetContext();
-
-		ubo.vert.view.loadIdentity();
-		ubo.vert.view.translate({ x, 0.0f, -8.0f });
-		ubo.vert.model.loadIdentity();
-		ubo.vert.model.rotate(0.25f * t, { 0.0f, 1.0f, 0.0f });
-		ubo.vert.model.rotate(75.0f, { 1.0f, 0.0f, 0.0f });
-		ubo.vert.modelview = ubo.vert.view * ubo.vert.model;
-		//ubo.vert.modelview.rotate(45.0f + (0.25f * t), { 1.0f, 0.0f, 0.0f });
-		//ubo.vert.modelview.rotate(45.0f - (0.50f * t), { 0.0f, 1.0f, 0.0f });
-		//ubo.vert.modelview.rotate(10.0f + (0.15f * t), { 0.0f, 0.0f, 1.0f });
-		FxMatrix4f projection;
-		projection.perspective(45.0f, context->aspectRatio(), 0.1f, 100.0f);
-		ubo.vert.modelviewprojection = projection * ubo.vert.modelview;
-		ubo.vert.color.g = 0.5f * sin(t) + 0.5f;
-		memcpy(ubo.vert.normal, &ubo.vert.model, sizeof(ubo.vert.normal));
+	void VulkanDescriptorSet::update() {
 		flags.set(UBO_DIRTY_FLAG);
 	}
 
@@ -53,19 +40,18 @@ namespace Fluxions {
 	}
 
 
-	bool VulkanDescriptorSet::_createDescriptorSet(VkDescriptorPool pool, VkDescriptorSetLayout layout) {
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
-			//VkStructureType                 sType;
-			//const void*                     pNext;
-			//VkDescriptorPool                descriptorPool;
-			//uint32_t                        descriptorSetCount;
-			//const VkDescriptorSetLayout*    pSetLayouts;
-			VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			nullptr,
-			pool,
-			1, &layout
-		};
-		if (vkAllocateDescriptorSets(VulkanContext::GetDevice(), &descriptorSetAllocateInfo, &descriptorSet_) != VK_SUCCESS) {
+	bool VulkanDescriptorSet::_createDescriptorSet(VkDescriptorPool pool, const VkDescriptorSetLayout layout) {
+		VkDescriptorSetAllocateInfo dsai{};
+		//VkStructureType                 sType;
+		//const void*                     pNext;
+		//VkDescriptorPool                descriptorPool;
+		//uint32_t                        descriptorSetCount;
+		//const VkDescriptorSetLayout*    pSetLayouts;
+		dsai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		dsai.descriptorPool = pool;
+		dsai.descriptorSetCount = 1;
+		dsai.pSetLayouts = &layout;
+		if (vkAllocateDescriptorSets(VulkanContext::GetDevice(), &dsai, &descriptorSet_) != VK_SUCCESS) {
 			HFLOGERROR("Could not allocate descriptor sets");
 			return false;
 		}
@@ -83,6 +69,8 @@ namespace Fluxions {
 		//VkImageView      imageView;
 		//VkImageLayout    imageLayout;
 		VkDescriptorImageInfo dbiSampler = { nullptr, nullptr, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+
+		if (!descriptorSet_) return false;
 
 		VkWriteDescriptorSet wds{};
 		//VkStructureType                  sType;
