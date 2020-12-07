@@ -1,6 +1,23 @@
-#version 420 core
+#version 450 core
 
-// layout(set = 0, binding = 1) uniform sampler2D tex0;
+layout(push_constant) uniform FragmentPushConstants {
+    layout(offset = 64)
+    vec4 Kd;
+    vec4 Ks;
+    vec4 Roughness;
+    vec4 mixes;
+} Material;
+
+layout(std140, set = 0, binding = 1) uniform FragmentUniformBlock {
+    mat4 modelMatrix;
+    mat4 viewMatrix;
+    mat4 modelviewMatrix;
+    mat4 modelviewprojectionMatrix;
+    mat3 normalMatrix;
+    vec4 color;
+};
+
+layout(set = 0, binding = 2) uniform sampler2D map_Kd;
 
 layout(location = 0) in vec3 vPosition;
 layout(location = 1) in vec3 vNormal;

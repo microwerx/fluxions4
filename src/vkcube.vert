@@ -1,12 +1,17 @@
-#version 420 core
+#version 450 core
 
-layout(std140, set = 0, binding = 0) uniform block {
-    uniform mat4 modelMatrix;
-    uniform mat4 viewMatrix;
-    uniform mat4 modelviewMatrix;
-    uniform mat4 modelviewprojectionMatrix;
-    uniform mat3 normalMatrix;
-    uniform vec4 color;
+layout(push_constant) uniform VertexPushConstants {
+    layout(offset = 0)
+    mat4 modelMatrix;
+} Matrix;
+
+layout(std140, set = 0, binding = 0) uniform VertexUniformBlock {
+    mat4 modelMatrix;
+    mat4 viewMatrix;
+    mat4 modelviewMatrix;
+    mat4 modelviewprojectionMatrix;
+    mat3 normalMatrix;
+    vec4 color;
 };
 
 layout(location = 0) in vec4 aPosition;
