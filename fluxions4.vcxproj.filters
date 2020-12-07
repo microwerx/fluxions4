@@ -160,5 +160,8 @@
     <ClInclude Include="src\imgui_impl_vulkan.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\fluxions4.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
