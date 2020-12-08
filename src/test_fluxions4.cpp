@@ -93,6 +93,8 @@ public:
 			vkpipeline.restore();
 
 			vkcontext.presentFrame();
+
+			std::this_thread::yield();
 		}
 	}
 
